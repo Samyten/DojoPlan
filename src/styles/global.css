@@ -1,0 +1,1015 @@
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f3f1ee;
+  color: #151313;
+  --bg: #f3f1ee;
+  --surface: #fffdf9;
+  --surface-strong: #f7f3ed;
+  --ink: #151313;
+  --muted: #69615d;
+  --line: #d8d0c7;
+  --accent: #e30613;
+  --accent-strong: #9d0610;
+  --accent-soft: #ffe1df;
+  --dojo-black: #050505;
+  --dojo-red: #e30613;
+  --dojo-white: #fffdf9;
+  --green: #276749;
+  --green-soft: #dff3e8;
+  --red: #9b2c2c;
+  --red-soft: #f8dddd;
+  --amber: #805c16;
+  --amber-soft: #f8ebc9;
+  --gray-soft: #ebe6dd;
+  --shadow: 0 14px 34px rgb(12 10 8 / 13%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% -18%, rgb(227 6 19 / 14%) 0, transparent 28%),
+    linear-gradient(180deg, #fffdfa 0, var(--bg) 280px),
+    var(--bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0;
+}
+
+.app-shell--loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+}
+
+.auth-screen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-panel {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 420px);
+  padding: 22px;
+}
+
+.auth-panel h1,
+.auth-panel p {
+  margin: 0;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 0 20px;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.dojo-logo {
+  width: clamp(74px, 9vw, 112px);
+  height: clamp(74px, 9vw, 112px);
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--dojo-black);
+  box-shadow:
+    0 12px 26px rgb(0 0 0 / 20%),
+    0 0 0 4px var(--surface),
+    0 0 0 6px var(--dojo-black);
+  object-fit: contain;
+}
+
+.app-header h1,
+.panel h2,
+.panel h3,
+.teacher-card h3 {
+  margin: 0;
+  line-height: 1.15;
+}
+
+.app-header h1 {
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 850;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.user-switcher {
+  display: grid;
+  gap: 7px;
+  min-width: min(100%, 280px);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 680;
+}
+
+.user-switcher--readonly {
+  justify-items: end;
+  text-align: right;
+}
+
+.user-switcher--readonly strong,
+.user-switcher--readonly small {
+  color: var(--ink);
+}
+
+.user-switcher select,
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.field textarea {
+  min-height: 138px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.main-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.nav-button,
+.icon-button,
+.primary-button,
+.secondary-button,
+.danger-button,
+.text-button {
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 760;
+}
+
+.nav-button {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.nav-button--active {
+  background: var(--dojo-black);
+  border-color: var(--dojo-black);
+  color: #fffdfa;
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.icon-button {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.sessions-layout,
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.8fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.calendar-main {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.panel {
+  border: 1px solid color-mix(in srgb, var(--line) 86%, var(--dojo-black));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 94%, white);
+  box-shadow: var(--shadow);
+}
+
+.panel-heading,
+.inline-heading,
+.teacher-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panel-heading {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.count-pill,
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  background: var(--gray-soft);
+  color: var(--muted);
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  font-weight: 760;
+  text-transform: capitalize;
+}
+
+.session-stack {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.session-group {
+  display: grid;
+  gap: 8px;
+}
+
+.date-divider {
+  margin: 8px 4px 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 780;
+}
+
+.session-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 14px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 14px;
+  text-align: left;
+}
+
+.session-card--active {
+  border-color: var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.session-card strong,
+.session-card small,
+.teacher-availability-row strong,
+.teacher-availability-row small,
+.change-item small {
+  display: block;
+}
+
+.session-card small,
+.teacher-availability-row small,
+.change-item small,
+.muted-box small,
+.teacher-card p {
+  color: var(--muted);
+}
+
+.session-card__meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.lesson-state {
+  grid-column: 1 / -1;
+  color: var(--green);
+  font-size: 0.86rem;
+  font-weight: 760;
+}
+
+.lesson-state--empty {
+  color: var(--amber);
+}
+
+.calendar-heading {
+  align-items: flex-start;
+}
+
+.calendar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.weekday-label {
+  background: var(--surface-strong);
+  color: var(--muted);
+  padding: 10px 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.calendar-day {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 112px;
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 10px;
+  text-align: left;
+}
+
+.calendar-day--muted {
+  background: #f2eee6;
+  color: #928a80;
+}
+
+.calendar-day--has-sessions {
+  background: #fffaf2;
+}
+
+.calendar-day--holiday {
+  background: #ebe6dd;
+  color: #6f675d;
+}
+
+.calendar-day--holiday.calendar-day--has-sessions {
+  background: #f2eee6;
+}
+
+.calendar-day--selected {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.calendar-day__number {
+  font-weight: 820;
+}
+
+.calendar-day__sessions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.calendar-holiday-label {
+  overflow: hidden;
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in srgb, var(--muted) 78%, white);
+  padding: 1px 0;
+  font-size: 0.62rem;
+  font-weight: 740;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-session-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  padding: 4px 7px;
+  font-size: 0.74rem;
+  font-weight: 820;
+  white-space: nowrap;
+}
+
+.day-session-picker {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.selected-day-agenda {
+  background: color-mix(in srgb, var(--surface-strong) 62%, white);
+}
+
+.agenda-helper {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.holiday-notice {
+  margin: 8px 0 0;
+  border-left: 3px solid var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+  padding: 8px 10px;
+  line-height: 1.35;
+}
+
+.holiday-notice strong {
+  color: var(--ink);
+}
+
+.day-session-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.day-session-button {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.day-session-button span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.day-session-button--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--muted);
+}
+
+.empty-state--agenda,
+.empty-state--panel {
+  padding: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.empty-state--panel {
+  margin: 14px;
+}
+
+.detail-panel {
+  position: sticky;
+  top: 16px;
+  padding: 20px;
+}
+
+.session-detail-header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.session-detail-header p:last-child {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.detail-section {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.detail-section-heading {
+  margin-bottom: 14px;
+}
+
+.detail-section-heading h3 {
+  margin: 0;
+}
+
+.detail-section-heading .eyebrow {
+  margin-bottom: 4px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.lesson-form,
+.availability-editor,
+.admin-create-form,
+.admin-session-form,
+.teacher-management-form {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-create-form {
+  padding: 16px;
+}
+
+.admin-course-section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-course-section:first-of-type {
+  border-top: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form-context {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.form-context--changed {
+  color: var(--amber);
+  font-weight: 760;
+}
+
+.form-error {
+  margin: 0;
+  border: 1px solid var(--red-soft);
+  border-radius: 8px;
+  background: #fff3f3;
+  color: var(--red);
+  padding: 10px 12px;
+  font-weight: 720;
+}
+
+.admin-session-tools {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-edit-form {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 14px;
+}
+
+.primary-button {
+  background: var(--dojo-red);
+  color: #fffdfa;
+}
+
+.secondary-button {
+  background: var(--dojo-black);
+  color: #fffdfa;
+}
+
+.danger-button {
+  background: #fff7f7;
+  border-color: var(--red-soft);
+  color: var(--red);
+}
+
+.text-button {
+  background: transparent;
+  color: var(--accent-strong);
+  padding-inline: 0;
+}
+
+.status-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.status-options legend {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.status-option {
+  min-width: 0;
+}
+
+.status-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.status-option span {
+  display: grid;
+  min-height: 44px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 8px 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 760;
+  text-transform: capitalize;
+}
+
+.status-option input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-badge--present {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.status-badge--absent {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.status-badge--maybe {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.status-badge--unknown {
+  background: var(--gray-soft);
+  color: var(--muted);
+}
+
+.teacher-availability-list,
+.change-list,
+.teacher-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.teacher-availability-row,
+.change-item,
+.teacher-card,
+.muted-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.teacher-availability-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+}
+
+.muted-box {
+  padding: 14px;
+}
+
+.muted-box p {
+  margin: 0 0 8px;
+}
+
+.changes-feed,
+.teachers-page {
+  max-width: 900px;
+}
+
+.change-list,
+.teacher-grid {
+  padding: 14px;
+}
+
+.change-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+}
+
+.change-item p {
+  margin: 0 0 6px;
+}
+
+.change-item__marker {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.teacher-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.teacher-management-form {
+  margin: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 14px;
+}
+
+.teacher-form-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(160px, 0.5fr);
+}
+
+.teacher-card {
+  display: grid;
+  gap: 18px;
+  padding: 16px;
+}
+
+.teacher-card p {
+  margin: 6px 0 0;
+}
+
+.teacher-management-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.teacher-reorder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.teacher-reorder-actions .text-button {
+  min-height: 36px;
+}
+
+.error-banner {
+  border: 1px solid var(--red-soft);
+  border-radius: 8px;
+  background: #fff3f3;
+  color: var(--red);
+  padding: 12px 14px;
+}
+
+.app-footer {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.dev-tools {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.dev-tools summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 760;
+}
+
+.dev-tools p {
+  margin: 8px 0;
+}
+
+.supabase-diagnostics {
+  margin-bottom: 12px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-strong) 70%, transparent);
+  padding: 12px;
+}
+
+.diagnostic-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.diagnostic-list div {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.35fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.diagnostic-list dt {
+  color: var(--muted);
+  font-weight: 760;
+}
+
+.diagnostic-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+.diagnostic-warning {
+  border-left: 3px solid var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+  padding: 9px 10px;
+}
+
+@media (max-width: 900px) {
+  .sessions-layout,
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    width: min(100% - 20px, 1180px);
+    padding: 16px 0;
+  }
+
+  .app-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .brand-lockup {
+    align-items: center;
+  }
+
+  .dojo-logo {
+    width: 76px;
+    height: 76px;
+  }
+
+  .main-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-heading {
+    gap: 14px;
+  }
+
+  .calendar-actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .calendar-actions .icon-button {
+    flex: 1;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(40px, 1fr));
+  }
+
+  .weekday-label {
+    padding: 8px 2px;
+    font-size: 0.72rem;
+  }
+
+  .calendar-day {
+    min-height: 76px;
+    padding: 7px;
+  }
+
+  .calendar-session-dot {
+    min-width: 38px;
+    padding: 3px 5px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .calendar-holiday-label {
+    padding: 0;
+    font-size: 0.58rem;
+    white-space: nowrap;
+  }
+
+  .day-session-button {
+    min-height: 72px;
+    padding: 14px;
+  }
+
+  .day-session-button strong {
+    font-size: 1rem;
+  }
+
+  .admin-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-form-grid,
+  .teacher-management-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .session-card {
+    grid-template-columns: 1fr;
+  }
+
+  .status-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teacher-availability-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .diagnostic-list div {
+    grid-template-columns: 1fr;
+  }
+}
