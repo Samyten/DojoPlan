@@ -582,6 +582,58 @@ button:disabled {
   margin-bottom: 12px;
 }
 
+.lesson-content-details {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.lesson-content-details summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  padding: 12px;
+  list-style: none;
+}
+
+.lesson-content-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.lesson-content-details summary:hover,
+.lesson-content-details summary:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.lesson-content-details summary::after {
+  content: '+';
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  font-weight: 900;
+}
+
+.lesson-content-details[open] summary::after {
+  content: '−';
+}
+
+.lesson-content-details summary .eyebrow {
+  margin: 0;
+}
+
+.lesson-content-details summary strong {
+  display: block;
+}
+
 .weekday-options {
   display: flex;
   flex-wrap: wrap;
