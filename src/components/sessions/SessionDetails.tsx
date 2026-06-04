@@ -81,10 +81,21 @@ export function SessionDetails({
         </p>
       </div>
 
-      <section className="detail-section muted-box">
-        <p className="eyebrow">Notes</p>
-        <p>{session.notes?.trim() ? session.notes : 'Aucune note pour le moment.'}</p>
-        <small>Dernière mise à jour : {formatTimestamp(session.updatedAt)}</small>
+      <section className="detail-section">
+        <details className="secondary-details lesson-content-details">
+          <summary>
+            <span className="eyebrow">Préparation</span>
+            <strong>Contenu du cours</strong>
+          </summary>
+          <LessonPlanEditor
+            key={`${session.id}-${session.updatedAt}`}
+            session={session}
+            currentTeacher={currentTeacher}
+            isSaving={isSaving}
+            onSaveLessonPlan={onSaveLessonPlan}
+          />
+          <small>Dernière mise à jour : {formatTimestamp(session.updatedAt)}</small>
+        </details>
       </section>
 
       <section className="detail-section">
@@ -120,22 +131,6 @@ export function SessionDetails({
           isSaving={isSaving}
           onBulkUpdateAvailability={onBulkUpdateAvailability}
         />
-      </section>
-
-      <section className="detail-section">
-        <details className="secondary-details lesson-content-details">
-          <summary>
-            <span className="eyebrow">Préparation</span>
-            <strong>Contenu du cours</strong>
-          </summary>
-          <LessonPlanEditor
-            key={`${session.id}-${session.updatedAt}`}
-            session={session}
-            currentTeacher={currentTeacher}
-            isSaving={isSaving}
-            onSaveLessonPlan={onSaveLessonPlan}
-          />
-        </details>
       </section>
 
       <section className="detail-section">
@@ -264,9 +259,9 @@ function LessonPlanEditor({
   isSaving,
   onSaveLessonPlan,
 }: LessonPlanEditorProps) {
-  const [lessonDraft, setLessonDraft] = useState(session.lessonPlan ?? '');
-  const savedLessonPlan = session.lessonPlan ?? '';
-  const lessonHasChanges = lessonDraft !== savedLessonPlan;
+  const savedLessonContent = getCombinedLessonContent(session);
+  const [lessonDraft, setLessonDraft] = useState(savedLessonContent);
+  const lessonHasChanges = lessonDraft !== savedLessonContent;
 
   return (
     <form
@@ -277,7 +272,7 @@ function LessonPlanEditor({
       }}
     >
       <label className="field">
-        <span>Plan du cours</span>
+        <span>Contenu du cours</span>
         <textarea
           name="lessonPlan"
           value={lessonDraft}
@@ -290,7 +285,7 @@ function LessonPlanEditor({
           ? `Modifications non enregistrées pour ${session.title}.`
           : `Cet enregistrement modifiera ${session.title} avec ${currentTeacher.name}.`}
       </p>
-      {!savedLessonPlan.trim() ? (
+      {!savedLessonContent.trim() ? (
         <p className="empty-state">Aucun contenu de cours n'a encore été ajouté.</p>
       ) : null}
       <button className="secondary-button" type="submit" disabled={isSaving || !lessonHasChanges}>
@@ -298,4 +293,15 @@ function LessonPlanEditor({
       </button>
     </form>
   );
+}
+
+function getCombinedLessonContent(session: Session) {
+  const lessonPlan = session.lessonPlan?.trim() ?? '';
+  const notes = session.notes?.trim() ?? '';
+
+  if (lessonPlan && notes && !lessonPlan.includes(notes)) {
+    return `${lessonPlan}\n\n${notes}`;
+  }
+
+  return lessonPlan || notes;
 }

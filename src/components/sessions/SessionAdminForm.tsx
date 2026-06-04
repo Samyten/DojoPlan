@@ -19,6 +19,7 @@ export function SessionAdminForm({
   const [error, setError] = useState<string | undefined>();
   const [selectedDate, setSelectedDate] = useState(initialSession?.date ?? '');
   const selectedHoliday = selectedDate ? getHolidayInfo(selectedDate) : undefined;
+  const initialLessonContent = initialSession ? getCombinedLessonContent(initialSession) : '';
 
   return (
     <form
@@ -83,18 +84,9 @@ export function SessionAdminForm({
         <span>Contenu du cours</span>
         <textarea
           name="lessonPlan"
-          defaultValue={initialSession?.lessonPlan ?? ''}
-          rows={4}
-        />
-      </label>
-
-      <label className="field">
-        <span>Notes</span>
-        <textarea
-          name="notes"
-          defaultValue={initialSession?.notes ?? ''}
-          rows={3}
-          placeholder="Informations utiles pour les professeurs"
+          defaultValue={initialLessonContent}
+          rows={5}
+          placeholder="Préparation, informations utiles, consignes pour les professeurs"
         />
       </label>
 
@@ -113,6 +105,17 @@ function getSessionInput(formData: FormData): CreateSessionInput {
     endTime: String(formData.get('endTime') ?? ''),
     location: String(formData.get('location') ?? ''),
     lessonPlan: String(formData.get('lessonPlan') ?? ''),
-    notes: String(formData.get('notes') ?? ''),
+    notes: '',
   };
+}
+
+function getCombinedLessonContent(session: Session) {
+  const lessonPlan = session.lessonPlan?.trim() ?? '';
+  const notes = session.notes?.trim() ?? '';
+
+  if (lessonPlan && notes && !lessonPlan.includes(notes)) {
+    return `${lessonPlan}\n\n${notes}`;
+  }
+
+  return lessonPlan || notes;
 }

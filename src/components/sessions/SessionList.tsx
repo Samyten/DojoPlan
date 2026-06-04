@@ -21,6 +21,7 @@ export function SessionList({ sessions, selectedSessionId, onSelectSession }: Se
       <div className="session-stack">
         {sessions.map((session, index) => {
           const shouldShowDate = sessions[index - 1]?.date !== session.date;
+          const hasLessonContent = Boolean(session.lessonPlan?.trim() || session.notes?.trim());
 
           return (
             <div key={session.id} className="session-group">
@@ -37,8 +38,8 @@ export function SessionList({ sessions, selectedSessionId, onSelectSession }: Se
                 <span className="session-card__meta">
                   {session.location ? session.location : 'Lieu non renseigné'}
                 </span>
-                <span className={session.lessonPlan?.trim() ? 'lesson-state' : 'lesson-state lesson-state--empty'}>
-                  {session.lessonPlan?.trim() ? 'Contenu prêt' : 'Aucun contenu'}
+                <span className={hasLessonContent ? 'lesson-state' : 'lesson-state lesson-state--empty'}>
+                  {hasLessonContent ? 'Contenu prêt' : 'Aucun contenu'}
                 </span>
               </button>
             </div>
