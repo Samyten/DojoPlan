@@ -652,9 +652,9 @@ button:disabled {
   -webkit-line-clamp: 3;
 }
 
-.lesson-content-preview--empty {
-  color: var(--muted-light);
-  font-style: italic;
+.lesson-content-details:not([open]) .lesson-form,
+.lesson-content-details:not([open]) > small {
+  display: none;
 }
 
 .lesson-content-details[open] .lesson-content-preview {

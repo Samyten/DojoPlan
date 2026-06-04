@@ -88,9 +88,7 @@ export function SessionDetails({
             <span className="lesson-content-summary">
               <span className="eyebrow">Préparation</span>
               <strong>Contenu du cours</strong>
-              <span className={lessonContent ? 'lesson-content-preview' : 'lesson-content-preview lesson-content-preview--empty'}>
-                {lessonContent || "Aucun contenu de cours n'a encore été ajouté."}
-              </span>
+              {lessonContent ? <span className="lesson-content-preview">{lessonContent}</span> : null}
             </span>
           </summary>
           <LessonPlanEditor
@@ -281,9 +279,6 @@ function LessonPlanEditor({
         <p className="form-context form-context--changed">
           Modifications non enregistrées pour {session.title}.
         </p>
-      ) : null}
-      {!savedLessonContent.trim() ? (
-        <p className="empty-state">Aucun contenu de cours n'a encore été ajouté.</p>
       ) : null}
       <button className="secondary-button" type="submit" disabled={isSaving || !lessonHasChanges}>
         {isSaving ? 'Enregistrement...' : 'Enregistrer le contenu pour ce cours'}
