@@ -26,6 +26,14 @@ export const recurringLessonTemplates: RecurringLessonTemplate[] = [
     location: 'Dojo principal',
   },
   {
+    id: 'monday-karate-contact',
+    dayOfWeek: 1,
+    title: 'Karaté Contact',
+    startTime: '20:30',
+    endTime: '21:30',
+    location: 'Dojo principal',
+  },
+  {
     id: 'wednesday-small-kids',
     dayOfWeek: 3,
     title: 'Enfants de 5 à 9 ans',
@@ -47,6 +55,14 @@ export const recurringLessonTemplates: RecurringLessonTemplate[] = [
     title: 'Adultes',
     startTime: '19:15',
     endTime: '20:30',
+    location: 'Dojo principal',
+  },
+  {
+    id: 'thursday-karate-contact',
+    dayOfWeek: 4,
+    title: 'Karaté Contact',
+    startTime: '20:30',
+    endTime: '21:30',
     location: 'Dojo principal',
   },
 ];

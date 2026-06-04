@@ -14,6 +14,7 @@ import {
   createTeacher,
   deleteSession,
   deleteTeacher,
+  bulkUpdateAvailability,
   getDojoData,
   getDojoDataSnapshot,
   reorderTeachers,
@@ -135,7 +136,7 @@ export function App() {
     }
   }
 
-  async function handleSaveAvailability(status: AvailabilityStatus, comment: string) {
+async function handleSaveAvailability(status: AvailabilityStatus, comment: string) {
     if (!selectedSessionId || !currentTeacher) {
       return;
     }
@@ -148,6 +149,57 @@ export function App() {
       await refreshData();
     } catch (saveError) {
       setError(getFriendlyErrorMessage(saveError, "La disponibilité n'a pas pu être enregistrée."));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleSaveAvailabilityForTeacher(
+    teacherId: string,
+    status: AvailabilityStatus,
+    comment: string,
+  ) {
+    if (!selectedSessionId || !currentTeacher) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError(undefined);
+
+    try {
+      await updateAvailability(selectedSessionId, teacherId, status, comment, currentTeacher.id);
+      await refreshData();
+    } catch (saveError) {
+      setError(getFriendlyErrorMessage(saveError, "La disponibilité n'a pas pu être enregistrée."));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleBulkUpdateAvailability(input: {
+    targetTeacherId: string;
+    sessionIds: string[];
+    status: AvailabilityStatus;
+    comment: string;
+    overwriteExisting: boolean;
+  }) {
+    if (!currentTeacher) {
+      return undefined;
+    }
+
+    setIsSaving(true);
+    setError(undefined);
+
+    try {
+      const result = await bulkUpdateAvailability({
+        ...input,
+        actorTeacherId: currentTeacher.id,
+      });
+      await refreshData();
+      return result;
+    } catch (saveError) {
+      setError(getFriendlyErrorMessage(saveError, "Les disponibilités n'ont pas pu être enregistrées."));
+      return undefined;
     } finally {
       setIsSaving(false);
     }
@@ -401,11 +453,15 @@ export function App() {
           </div>
           <SessionDetails
             session={selectedSession}
+            sessions={data.sessions}
             teachers={data.teachers}
             availability={selectedAvailability}
+            allAvailability={data.availability}
             currentTeacher={currentTeacher}
             isSaving={isSaving}
             onSaveAvailability={handleSaveAvailability}
+            onSaveAvailabilityForTeacher={handleSaveAvailabilityForTeacher}
+            onBulkUpdateAvailability={handleBulkUpdateAvailability}
             onSaveLessonPlan={handleSaveLessonPlan}
           />
         </main>

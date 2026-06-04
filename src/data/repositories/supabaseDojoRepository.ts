@@ -1,6 +1,8 @@
 import type {
   Availability,
   AvailabilityStatus,
+  BulkAvailabilityInput,
+  BulkAvailabilityResult,
   ChangeLogEntry,
   CreateSessionInput,
   CreateTeacherInput,
@@ -55,6 +57,14 @@ type ChangeLogEntryRow = {
   description: string;
   metadata: Record<string, unknown> | null;
   created_at: string;
+};
+
+type BulkAvailabilityResultRow = {
+  target_teacher_id: string;
+  status: AvailabilityStatus;
+  matched_count: number;
+  updated_count: number;
+  skipped_count: number;
 };
 
 const emptyState: DojoDataState = {
@@ -378,56 +388,50 @@ export async function updateAvailability(
   comment = '',
   actorTeacherId = teacherId,
 ): Promise<Availability> {
-  const [actor, session, existing] = await Promise.all([
-    getTeacherOrThrow(actorTeacherId),
-    getSessionOrThrow(sessionId),
-    getExistingAvailability(sessionId, teacherId),
-  ]);
-  const now = new Date().toISOString();
-  const previousStatus = existing?.status ?? 'unknown';
-  const previousComment = existing?.comment ?? '';
+  const { error } = await getSupabaseClient().rpc('bulk_update_availability', {
+    p_target_teacher_id: teacherId,
+    p_session_ids: [sessionId],
+    p_status: status,
+    p_comment: comment,
+    p_overwrite_existing: true,
+  });
 
+  if (error) {
+    throw error;
+  }
+
+  // Keep the repository signature stable; the RPC derives the trusted actor from auth.uid().
+  void actorTeacherId;
+
+  const availability = await getExistingAvailability(sessionId, teacherId);
+
+  if (!availability) {
+    throw new Error('Availability update failed.');
+  }
+
+  return availability;
+}
+
+export async function bulkUpdateAvailability(
+  input: BulkAvailabilityInput,
+): Promise<BulkAvailabilityResult> {
   const { data, error } = await getSupabaseClient()
-    .from('availability')
-    .upsert(
-      {
-        session_id: sessionId,
-        teacher_id: teacherId,
-        status,
-        comment,
-        updated_at: now,
-      },
-      { onConflict: 'session_id,teacher_id' },
-    )
-    .select('id,session_id,teacher_id,status,comment,updated_at')
+    .rpc('bulk_update_availability', {
+      p_target_teacher_id: input.targetTeacherId,
+      p_session_ids: input.sessionIds,
+      p_status: input.status,
+      p_comment: input.comment ?? '',
+      p_overwrite_existing: input.overwriteExisting,
+    })
     .single();
 
   if (error) {
     throw error;
   }
 
-  const availability = mapAvailabilityRow(data as AvailabilityRow);
-
-  if (previousStatus !== status || previousComment !== comment) {
-    await createChangeLogEntry({
-      sessionId,
-      teacherId,
-      actorTeacherId,
-      type: 'availability_changed',
-      description: describeAvailabilityChange(
-        actor.name,
-        session,
-        status,
-        previousStatus !== status,
-      ),
-      metadata: {
-        previousStatus,
-        nextStatus: status,
-      },
-    });
-  }
-
-  return availability;
+  // Keep the repository signature stable; the RPC derives the trusted actor from auth.uid().
+  void input.actorTeacherId;
+  return mapBulkAvailabilityResult(data as BulkAvailabilityResultRow);
 }
 
 export async function updateLessonPlan(
@@ -611,28 +615,14 @@ function mapChangeLogEntryRow(row: ChangeLogEntryRow): ChangeLogEntry {
   };
 }
 
-function describeAvailabilityChange(
-  actorName: string,
-  session: Session,
-  nextStatus: AvailabilityStatus,
-  statusChanged: boolean,
-) {
-  if (!statusChanged) {
-    return `${actorName} a modifié son commentaire de disponibilité pour le ${formatSessionForChange(session)}.`;
-  }
-
-  return `${actorName} a indiqué ${availabilitySentence(nextStatus)} pour le ${formatSessionForChange(session)}.`;
-}
-
-function availabilitySentence(status: AvailabilityStatus) {
-  const labels: Record<AvailabilityStatus, string> = {
-    present: "qu'il sera présent",
-    absent: "qu'il sera absent",
-    maybe: "qu'il est peut-être disponible",
-    unknown: "que sa disponibilité n'est pas renseignée",
+function mapBulkAvailabilityResult(row: BulkAvailabilityResultRow): BulkAvailabilityResult {
+  return {
+    targetTeacherId: row.target_teacher_id,
+    status: row.status,
+    matchedCount: row.matched_count,
+    updatedCount: row.updated_count,
+    skippedCount: row.skipped_count,
   };
-
-  return labels[status];
 }
 
 function formatSessionForChange(session: Session) {

@@ -52,6 +52,9 @@ export const deleteSession: DojoRepository['deleteSession'] = (...args) =>
 export const updateAvailability: DojoRepository['updateAvailability'] = (...args) =>
   getRepository().updateAvailability(...args);
 
+export const bulkUpdateAvailability: DojoRepository['bulkUpdateAvailability'] = (...args) =>
+  getRepository().bulkUpdateAvailability(...args);
+
 export const updateLessonPlan: DojoRepository['updateLessonPlan'] = (...args) =>
   getRepository().updateLessonPlan(...args);
 

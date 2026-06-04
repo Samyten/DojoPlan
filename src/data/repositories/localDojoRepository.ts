@@ -2,6 +2,8 @@ import { mockDojoData } from '../mockData';
 import type {
   Availability,
   AvailabilityStatus,
+  BulkAvailabilityInput,
+  BulkAvailabilityResult,
   ChangeLogEntry,
   CreateSessionInput,
   CreateTeacherInput,
@@ -75,17 +77,46 @@ function assertSuperAdmin(teacher: Teacher | undefined): asserts teacher is Teac
   }
 }
 
+function assertCanManageAvailabilityFor(
+  actor: Teacher | undefined,
+  targetTeacherId: string,
+): asserts actor is Teacher {
+  if (!actor) {
+    throw new Error('Cannot update availability for an unknown teacher.');
+  }
+
+  if (actor.id !== targetTeacherId && actor.role !== 'admin' && actor.role !== 'super_admin') {
+    throw new Error('Only admins can update availability for another teacher.');
+  }
+}
+
 function describeAvailabilityChange(
   actorName: string,
+  targetName: string,
   session: Session,
   nextStatus: AvailabilityStatus,
   statusChanged: boolean,
 ) {
+  if (actorName !== targetName) {
+    return `${actorName} a indiqué que ${targetName} ${availabilityTargetSentence(nextStatus)} pour le ${formatSessionForChange(session)}.`;
+  }
+
   if (!statusChanged) {
     return `${actorName} a modifié son commentaire de disponibilité pour le ${formatSessionForChange(session)}.`;
   }
 
   return `${actorName} a indiqué ${availabilitySentence(nextStatus)} pour le ${formatSessionForChange(session)}.`;
+}
+
+function availabilityTargetSentence(status: AvailabilityStatus) {
+  const labels: Record<AvailabilityStatus, string> = {
+    present: 'sera présent',
+    absent: 'sera absent',
+    maybe: 'est peut-être disponible',
+    unknown: "n'a pas de disponibilité renseignée",
+  };
+
+  return labels[status];
 }
 
 function availabilitySentence(status: AvailabilityStatus) {
@@ -329,13 +360,16 @@ export async function updateAvailability(
   const now = new Date().toISOString();
   const session = findSession(state, sessionId);
   const actor = findTeacher(state, actorTeacherId);
+  const targetTeacher = findTeacher(state, teacherId);
   const existing = state.availability.find(
     (availability) => availability.sessionId === sessionId && availability.teacherId === teacherId,
   );
 
-  if (!session || !actor) {
+  if (!session || !targetTeacher) {
     throw new Error('Cannot update availability for an unknown session or teacher.');
   }
+
+  assertCanManageAvailabilityFor(actor, teacherId);
 
   const previousStatus = existing?.status ?? 'unknown';
   const previousComment = existing?.comment ?? '';
@@ -366,6 +400,7 @@ export async function updateAvailability(
   if (previousStatus !== status || previousComment !== comment) {
     const description = describeAvailabilityChange(
       actor.name,
+      targetTeacher.name,
       session,
       status,
       previousStatus !== status,
@@ -386,6 +421,90 @@ export async function updateAvailability(
 
   saveState(state);
   return structuredClone(nextAvailability);
+}
+
+export async function bulkUpdateAvailability(
+  input: BulkAvailabilityInput,
+): Promise<BulkAvailabilityResult> {
+  const state = loadState();
+  const actor = findTeacher(state, input.actorTeacherId);
+  const targetTeacher = findTeacher(state, input.targetTeacherId);
+
+  if (!targetTeacher) {
+    throw new Error('Cannot update availability for an unknown teacher.');
+  }
+
+  assertCanManageAvailabilityFor(actor, input.targetTeacherId);
+
+  const requestedSessionIds = new Set(input.sessionIds);
+  const matchingSessions = sortSessions(
+    state.sessions.filter((session) => requestedSessionIds.has(session.id)),
+  );
+  const now = new Date().toISOString();
+  let updatedCount = 0;
+  let skippedCount = 0;
+
+  for (const session of matchingSessions) {
+    const existing = state.availability.find(
+      (availability) =>
+        availability.sessionId === session.id && availability.teacherId === input.targetTeacherId,
+    );
+    const hasExplicitExisting =
+      Boolean(existing) &&
+      (existing?.status !== 'unknown' || Boolean(existing?.comment?.trim()));
+
+    if (hasExplicitExisting && !input.overwriteExisting) {
+      skippedCount += 1;
+      continue;
+    }
+
+    if (existing) {
+      existing.status = input.status;
+      existing.comment = input.comment ?? '';
+      existing.updatedAt = now;
+    } else {
+      state.availability.push({
+        id: createId('availability'),
+        sessionId: session.id,
+        teacherId: input.targetTeacherId,
+        status: input.status,
+        comment: input.comment ?? '',
+        updatedAt: now,
+      });
+    }
+
+    updatedCount += 1;
+  }
+
+  if (updatedCount > 0 && actor) {
+    addChange(state, {
+      actorTeacherId: actor.id,
+      teacherId: targetTeacher.id,
+      type: 'availability_changed',
+      description:
+        actor.id === targetTeacher.id
+          ? `${actor.name} a renseigné ${updatedCount} disponibilités.`
+          : `${actor.name} a renseigné ${updatedCount} disponibilités pour ${targetTeacher.name}.`,
+      metadata: {
+        targetTeacherId: targetTeacher.id,
+        affectedSessionCount: updatedCount,
+        selectedSessionIds: matchingSessions.map((session) => session.id),
+        status: input.status,
+        overwriteExisting: input.overwriteExisting,
+        skippedCount,
+      },
+    });
+  }
+
+  saveState(state);
+
+  return {
+    targetTeacherId: input.targetTeacherId,
+    status: input.status,
+    matchedCount: matchingSessions.length,
+    updatedCount,
+    skippedCount,
+  };
 }
 
 export async function updateLessonPlan(

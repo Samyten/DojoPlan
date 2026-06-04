@@ -61,6 +61,23 @@ export interface Availability {
   updatedAt: string;
 }
 
+export interface BulkAvailabilityInput {
+  targetTeacherId: string;
+  actorTeacherId: string;
+  sessionIds: string[];
+  status: AvailabilityStatus;
+  comment?: string;
+  overwriteExisting: boolean;
+}
+
+export interface BulkAvailabilityResult {
+  targetTeacherId: string;
+  status: AvailabilityStatus;
+  matchedCount: number;
+  updatedCount: number;
+  skippedCount: number;
+}
+
 export interface ChangeLogEntry {
   id: string;
   sessionId?: string;

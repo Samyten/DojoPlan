@@ -558,6 +558,7 @@ button:disabled {
 
 .lesson-form,
 .availability-editor,
+.bulk-availability-form,
 .admin-create-form,
 .admin-session-form,
 .teacher-management-form {
@@ -565,8 +566,89 @@ button:disabled {
   gap: 14px;
 }
 
+.secondary-details {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.secondary-details summary {
+  cursor: pointer;
+  color: var(--accent-strong);
+  font-weight: 780;
+  min-height: 36px;
+}
+
+.secondary-details[open] summary {
+  margin-bottom: 12px;
+}
+
+.weekday-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.weekday-options legend {
+  width: 100%;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.weekday-options label,
+.checkbox-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.success-banner {
+  margin: 0;
+  border: 1px solid var(--green-soft);
+  border-radius: 8px;
+  background: #f2fff6;
+  color: var(--green);
+  padding: 10px 12px;
+  font-weight: 720;
+}
+
 .admin-create-form {
   padding: 16px;
+}
+
+.admin-panel-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-panel-summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-panel-summary::after {
+  content: '+';
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  font-weight: 900;
+}
+
+.admin-create-panel[open] .admin-panel-summary::after {
+  content: '−';
+}
+
+.admin-create-panel:not([open]) .admin-panel-summary {
+  border-bottom: 0;
 }
 
 .admin-course-section {

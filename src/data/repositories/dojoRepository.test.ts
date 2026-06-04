@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { CreateSessionInput, Session } from '../../types';
 import {
+  bulkUpdateAvailability,
   createTeacher,
   createSession,
   deleteSession,
@@ -235,6 +236,138 @@ describe('dojoRepository availability updates', () => {
     expect(afterSnapshot.changes[0].description).toContain("a indiqué qu'il sera absent");
     expect(beforeSnapshot.availability.find((item) => item.id === availability.id)).toBeUndefined();
   });
+
+  it('allows an admin to update another teacher availability', async () => {
+    const session = firstSession();
+    const availability = await updateAvailability(
+      session.id,
+      teacherId,
+      'absent',
+      'Indisponible.',
+      adminId,
+    );
+    const snapshot = getDojoDataSnapshot();
+
+    expect(availability.teacherId).toBe(teacherId);
+    expect(availability.status).toBe('absent');
+    expect(snapshot.changes[0].description).toContain('Marc Piperno a indiqué que Christian Martinez sera absent');
+  });
+
+  it('rejects individual on-behalf availability updates by a normal teacher', async () => {
+    const session = firstSession();
+
+    await expect(
+      updateAvailability(session.id, adminId, 'absent', '', teacherId),
+    ).rejects.toThrow('Only admins can update availability for another teacher');
+  });
+});
+
+describe('dojoRepository bulk availability updates', () => {
+  it('allows a teacher to bulk-update their own availability', async () => {
+    const wednesdaySessions = sessionsForWeekday(3).slice(0, 3);
+    const result = await bulkUpdateAvailability({
+      targetTeacherId: teacherId,
+      actorTeacherId: teacherId,
+      sessionIds: wednesdaySessions.map((session) => session.id),
+      status: 'absent',
+      comment: 'Jamais disponible le mercredi.',
+      overwriteExisting: false,
+    });
+    const snapshot = getDojoDataSnapshot();
+
+    expect(result.updatedCount).toBe(3);
+    expect(
+      snapshot.availability.filter((availability) => availability.teacherId === teacherId),
+    ).toHaveLength(3);
+    expect(snapshot.changes[0].description).toContain('a renseigné 3 disponibilités');
+  });
+
+  it('rejects bulk availability for another teacher by a normal teacher', async () => {
+    const sessions = sessionsForWeekday(1).slice(0, 2);
+
+    await expect(
+      bulkUpdateAvailability({
+        targetTeacherId: adminId,
+        actorTeacherId: teacherId,
+        sessionIds: sessions.map((session) => session.id),
+        status: 'absent',
+        overwriteExisting: false,
+      }),
+    ).rejects.toThrow('Only admins can update availability for another teacher');
+  });
+
+  it('allows admin and super admin to bulk-update another teacher', async () => {
+    const adminSessions = sessionsForWeekday(1).slice(0, 2);
+    const superAdminSessions = sessionsForWeekday(4).slice(0, 2);
+
+    const adminResult = await bulkUpdateAvailability({
+      targetTeacherId: teacherId,
+      actorTeacherId: adminId,
+      sessionIds: adminSessions.map((session) => session.id),
+      status: 'maybe',
+      overwriteExisting: false,
+    });
+    const superAdminResult = await bulkUpdateAvailability({
+      targetTeacherId: teacherId,
+      actorTeacherId: superAdminId,
+      sessionIds: superAdminSessions.map((session) => session.id),
+      status: 'present',
+      overwriteExisting: false,
+    });
+
+    expect(adminResult.updatedCount).toBe(2);
+    expect(superAdminResult.updatedCount).toBe(2);
+    expect(getDojoDataSnapshot().changes[0].description).toContain('Samy Belkacemi a renseigné 2 disponibilités');
+  });
+
+  it('preserves explicit existing availability unless overwrite is enabled', async () => {
+    const sessions = sessionsForWeekday(1).slice(0, 2);
+    await updateAvailability(sessions[0].id, teacherId, 'present', 'Déjà répondu.');
+
+    const preservedResult = await bulkUpdateAvailability({
+      targetTeacherId: teacherId,
+      actorTeacherId: teacherId,
+      sessionIds: sessions.map((session) => session.id),
+      status: 'absent',
+      overwriteExisting: false,
+    });
+
+    expect(preservedResult.updatedCount).toBe(1);
+    expect(preservedResult.skippedCount).toBe(1);
+    expect(
+      getDojoDataSnapshot().availability.find((availability) => availability.sessionId === sessions[0].id)?.status,
+    ).toBe('present');
+
+    const overwriteResult = await bulkUpdateAvailability({
+      targetTeacherId: teacherId,
+      actorTeacherId: teacherId,
+      sessionIds: sessions.map((session) => session.id),
+      status: 'absent',
+      overwriteExisting: true,
+    });
+
+    expect(overwriteResult.updatedCount).toBe(2);
+    expect(
+      getDojoDataSnapshot().availability.find((availability) => availability.sessionId === sessions[0].id)?.status,
+    ).toBe('absent');
+  });
+
+  it('returns a sensible result when no sessions match', async () => {
+    const result = await bulkUpdateAvailability({
+      targetTeacherId: teacherId,
+      actorTeacherId: teacherId,
+      sessionIds: [],
+      status: 'absent',
+      overwriteExisting: false,
+    });
+
+    expect(result).toMatchObject({
+      matchedCount: 0,
+      updatedCount: 0,
+      skippedCount: 0,
+    });
+    expect(getDojoDataSnapshot().changes).toHaveLength(0);
+  });
 });
 
 describe('dojoRepository lesson content updates', () => {
@@ -277,6 +410,12 @@ function firstSession() {
   }
 
   return session;
+}
+
+function sessionsForWeekday(day: number) {
+  return getDojoDataSnapshot().sessions.filter(
+    (session) => new Date(`${session.date}T00:00:00`).getDay() === day,
+  );
 }
 
 function toInput(session: Session): CreateSessionInput {

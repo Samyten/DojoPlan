@@ -20,6 +20,12 @@ describe('recurring lesson schedule', () => {
           endTime: '20:30',
         }),
         expect.objectContaining({
+          dayOfWeek: 1,
+          title: 'Karaté Contact',
+          startTime: '20:30',
+          endTime: '21:30',
+        }),
+        expect.objectContaining({
           dayOfWeek: 3,
           title: 'Enfants de 5 à 9 ans',
           startTime: '17:15',
@@ -37,6 +43,31 @@ describe('recurring lesson schedule', () => {
           startTime: '19:15',
           endTime: '20:30',
         }),
+        expect.objectContaining({
+          dayOfWeek: 4,
+          title: 'Karaté Contact',
+          startTime: '20:30',
+          endTime: '21:30',
+        }),
+      ]),
+    );
+  });
+
+  it('includes Karaté Contact on Mondays and Thursdays', () => {
+    expect(recurringLessonTemplates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          dayOfWeek: 1,
+          title: 'Karaté Contact',
+          startTime: '20:30',
+          endTime: '21:30',
+        }),
+        expect.objectContaining({
+          dayOfWeek: 4,
+          title: 'Karaté Contact',
+          startTime: '20:30',
+          endTime: '21:30',
+        }),
       ]),
     );
   });
@@ -49,9 +80,11 @@ describe('generateRecurringSessions', () => {
     expect(sessions.map((session) => `${session.date} ${session.startTime} ${session.title}`)).toEqual([
       '2026-06-08 18:00 Enfants 10 à 14 ans',
       '2026-06-08 19:15 Adultes',
+      '2026-06-08 20:30 Karaté Contact',
       '2026-06-10 17:15 Enfants de 5 à 9 ans',
       '2026-06-11 18:00 Enfants 10 à 14 ans',
       '2026-06-11 19:15 Adultes',
+      '2026-06-11 20:30 Karaté Contact',
     ]);
   });
 
@@ -84,8 +117,8 @@ describe('generateRecurringSessions', () => {
 
     expect(lastSession).toMatchObject({
       date: '2027-07-01',
-      title: 'Adultes',
-      startTime: '19:15',
+      title: 'Karaté Contact',
+      startTime: '20:30',
     });
     expect(sessions.some((session) => session.date >= '2027-07-03')).toBe(false);
   });
@@ -106,5 +139,18 @@ describe('generateRecurringSessions', () => {
     expect(sessions.some((session) => session.date === '2027-05-06')).toBe(false);
     expect(sessions.some((session) => session.date === '2027-05-07')).toBe(false);
     expect(sessions.some((session) => session.date === '2027-05-17')).toBe(false);
+  });
+
+  it('skips Karaté Contact during holidays too', () => {
+    const sessions = generateSeasonSessions(activeDojoSeason);
+
+    expect(
+      sessions.some(
+        (session) =>
+          session.title === 'Karaté Contact' &&
+          session.date >= '2026-10-17' &&
+          session.date <= '2026-11-02',
+      ),
+    ).toBe(false);
   });
 });

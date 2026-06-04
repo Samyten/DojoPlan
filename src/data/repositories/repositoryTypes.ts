@@ -1,6 +1,8 @@
 import type {
   Availability,
   AvailabilityStatus,
+  BulkAvailabilityInput,
+  BulkAvailabilityResult,
   CreateTeacherInput,
   CreateSessionInput,
   DojoDataState,
@@ -39,6 +41,7 @@ export interface DojoRepository {
     comment?: string,
     actorTeacherId?: string,
   ): Promise<Availability>;
+  bulkUpdateAvailability(input: BulkAvailabilityInput): Promise<BulkAvailabilityResult>;
   updateLessonPlan(sessionId: string, lessonPlan: string, actorTeacherId: string): Promise<Session>;
   resetMockData(): Promise<DojoDataState>;
 }

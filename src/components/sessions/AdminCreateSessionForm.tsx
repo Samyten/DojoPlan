@@ -23,13 +23,13 @@ export function AdminCreateSessionForm({
   const isEditingSelectedSession = Boolean(selectedSession && editingSessionId === selectedSession.id);
 
   return (
-    <section className="panel admin-create-panel" aria-labelledby="admin-sessions-heading">
-      <div className="panel-heading">
+    <details className="panel admin-create-panel" aria-labelledby="admin-sessions-heading">
+      <summary className="panel-heading admin-panel-summary">
         <div>
           <p className="eyebrow">Administration</p>
           <h2 id="admin-sessions-heading">Gestion des cours</h2>
         </div>
-      </div>
+      </summary>
 
       <div className="admin-course-section">
         <div className="detail-section-heading">
@@ -123,6 +123,6 @@ export function AdminCreateSessionForm({
           </div>
         ) : null}
       </div>
-    </section>
+    </details>
   );
 }

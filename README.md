@@ -10,6 +10,8 @@ Application React + Vite + TypeScript pour organiser les cours entre professeurs
 - Sélection d'une date puis d'un cours lorsqu'il y a plusieurs cours le même jour.
 - Détail du cours avec contenu, notes et disponibilités des professeurs.
 - Modification de sa propre disponibilité.
+- Disponibilités en série dans un panneau replié par défaut.
+- Modification de la disponibilité d'un autre professeur réservée aux admins et super admins.
 - Modification du contenu du cours en mode local et en mode Supabase via RPC sécurisée.
 - Fil de modifications récentes.
 - Sélecteur d'utilisateur local pour travailler sans Supabase.
@@ -25,11 +27,13 @@ Les cours récurrents suivent le planning réel :
 - Lundi :
   - `Enfants 10 à 14 ans`, 18h00 - 19h15
   - `Adultes`, 19h15 - 20h30
+  - `Karaté Contact`, 20h30 - 21h30
 - Mercredi :
   - `Enfants de 5 à 9 ans`, 17h15 - 18h30
 - Jeudi :
   - `Enfants 10 à 14 ans`, 18h00 - 19h15
   - `Adultes`, 19h15 - 20h30
+  - `Karaté Contact`, 20h30 - 21h30
 
 La génération automatique ne crée pas de cours réguliers pendant les vacances scolaires de Perpignan / Zone C, les jours fériés français configurés, ni le pont de l'Ascension. Les admins peuvent quand même ajouter manuellement un cours exceptionnel sur une date de vacances ; le calendrier garde alors le marqueur de vacances et affiche aussi le cours.
 
@@ -40,6 +44,14 @@ Saison active : 2026-2027.
 - Premier cours régulier généré : mercredi 9 septembre 2026.
 - Derniers cours réguliers générés : jeudi 1 juillet 2027.
 - Aucun cours régulier n'est généré à partir des vacances d'été du 3 juillet 2027.
+
+## Disponibilités
+
+- Un professeur peut modifier uniquement sa propre disponibilité.
+- Un admin ou super admin peut modifier la disponibilité d'un autre professeur, depuis un panneau replié dans le détail du cours.
+- Le panneau `Renseigner plusieurs disponibilités` est replié par défaut et permet d'appliquer un statut à plusieurs cours filtrés par période, jour et type de cours.
+- Par défaut, les disponibilités déjà renseignées ne sont pas remplacées. La case `Remplacer également les disponibilités déjà renseignées` doit être cochée pour écraser des réponses existantes.
+- Les opérations en série créent une seule entrée résumée dans les modifications récentes.
 
 ## Lancer en mode local
 
@@ -130,6 +142,25 @@ VITE_SUPABASE_ANON_KEY=votre-cle-anon
 - N'utilisez jamais la clé `service_role` Supabase dans le frontend.
 - Ne vous fiez pas aux rôles côté interface sans avoir vérifié RLS dans le projet Supabase réel.
 
+## Mise à jour d'une production existante
+
+Pour une base Supabase déjà utilisée en production, ne relancez pas `supabase/seed.sql` : ce fichier vide et recrée des données de départ.
+
+Pour cette version, exécutez uniquement ces migrations additives dans Supabase SQL Editor, dans cet ordre :
+
+1. `supabase/migrations/add_karate_contact_sessions_2026_2027.sql`
+2. `supabase/migrations/add_bulk_availability_rpc.sql`
+
+Ensuite :
+
+1. Poussez les changements de code sur le dépôt relié à Vercel.
+2. Attendez le redéploiement automatique Vercel.
+3. Testez avec un compte professeur normal.
+4. Testez avec un compte admin ou super admin.
+5. Vérifiez que les cours `Karaté Contact` apparaissent les lundis et jeudis hors vacances.
+6. Vérifiez qu'un professeur peut utiliser `Renseigner plusieurs disponibilités` pour lui-même.
+7. Vérifiez qu'un admin peut renseigner la disponibilité d'un autre professeur.
+
 ## Créer et lier des comptes professeurs
 
 Dans Supabase Dashboard :
@@ -181,9 +212,12 @@ Règles principales :
 - Les admins et le super administrateur peuvent créer/modifier/supprimer des cours.
 - Seul le super administrateur peut créer/supprimer des professeurs et changer les rôles.
 - Les professeurs peuvent modifier uniquement leur propre disponibilité.
+- Les admins et super admins peuvent modifier la disponibilité d'un autre professeur via RPC sécurisée.
 - Les entrées de journal ne peuvent être insérées qu'avec `actor_teacher_id = current_teacher_id()`.
 
 Les mises à jour directes de `sessions` restent réservées aux admins. Les professeurs peuvent modifier le contenu pédagogique via `public.update_session_lesson_content`, défini dans `supabase/rpc.sql`. Cette fonction utilise `auth.uid()` pour retrouver le professeur connecté, met à jour uniquement `lesson_plan`, éventuellement `notes`, et crée une entrée de journal en français.
+
+Les disponibilités en série et les modifications de disponibilité pour un autre professeur passent par `public.bulk_update_availability`, aussi défini dans `supabase/rpc.sql`. Cette fonction utilise `auth.uid()` pour retrouver l'acteur, vérifie le rôle, applique les règles d'écrasement et crée une seule entrée de journal résumée.
 
 Ordre SQL recommandé :
 
@@ -218,6 +252,8 @@ npm run test:watch
 - `supabase/seed.sql` : données initiales Supabase.
 - `supabase/rls.sql` : policies RLS.
 - `supabase/rpc.sql` : RPC sécurisée pour le contenu pédagogique.
+- `supabase/migrations/add_karate_contact_sessions_2026_2027.sql` : ajoute les cours Karaté Contact manquants en production sans toucher aux autres cours.
+- `supabase/migrations/add_bulk_availability_rpc.sql` : ajoute la RPC de disponibilités en série et admin pour production existante.
 - `supabase/verify.sql` : requêtes read-only pour vérifier le setup Supabase.
 - `docs/supabase-live-test-plan.md` : scénario manuel pour tester admin/professeur.
 

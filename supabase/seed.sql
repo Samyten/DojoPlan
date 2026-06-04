@@ -24,9 +24,11 @@ templates(day_of_week, title, start_time, end_time, location, lesson_plan, notes
   values
     (1, 'Enfants 10 à 14 ans', '18:00'::time, '19:15'::time, 'Dojo principal', '', ''),
     (1, 'Adultes', '19:15'::time, '20:30'::time, 'Dojo principal', '', ''),
+    (1, 'Karaté Contact', '20:30'::time, '21:30'::time, 'Dojo principal', '', ''),
     (3, 'Enfants de 5 à 9 ans', '17:15'::time, '18:30'::time, 'Dojo principal', '', ''),
     (4, 'Enfants 10 à 14 ans', '18:00'::time, '19:15'::time, 'Dojo principal', '', ''),
-    (4, 'Adultes', '19:15'::time, '20:30'::time, 'Dojo principal', '', '')
+    (4, 'Adultes', '19:15'::time, '20:30'::time, 'Dojo principal', '', ''),
+    (4, 'Karaté Contact', '20:30'::time, '21:30'::time, 'Dojo principal', '', '')
 ),
 holiday_ranges(label, start_date, end_date) as (
   values
