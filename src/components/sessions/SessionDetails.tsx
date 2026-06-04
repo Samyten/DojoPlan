@@ -69,6 +69,7 @@ export function SessionDetails({
   const currentAvailability = availability.find((item) => item.teacherId === currentTeacher.id);
   const availabilityByTeacher = new Map(availability.map((item) => [item.teacherId, item]));
   const canEditOtherTeachers = canManageSessions(currentTeacher);
+  const lessonContent = getCombinedLessonContent(session);
 
   return (
     <aside className="panel detail-panel" aria-labelledby="details-heading">
@@ -84,8 +85,13 @@ export function SessionDetails({
       <section className="detail-section">
         <details className="secondary-details lesson-content-details">
           <summary>
-            <span className="eyebrow">Préparation</span>
-            <strong>Contenu du cours</strong>
+            <span className="lesson-content-summary">
+              <span className="eyebrow">Préparation</span>
+              <strong>Contenu du cours</strong>
+              <span className={lessonContent ? 'lesson-content-preview' : 'lesson-content-preview lesson-content-preview--empty'}>
+                {lessonContent || "Aucun contenu de cours n'a encore été ajouté."}
+              </span>
+            </span>
           </summary>
           <LessonPlanEditor
             key={`${session.id}-${session.updatedAt}`}

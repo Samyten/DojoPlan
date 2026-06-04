@@ -634,6 +634,33 @@ button:disabled {
   display: block;
 }
 
+.lesson-content-summary {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lesson-content-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 620;
+  line-height: 1.45;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.lesson-content-preview--empty {
+  color: var(--muted-light);
+  font-style: italic;
+}
+
+.lesson-content-details[open] .lesson-content-preview {
+  display: none;
+}
+
 .weekday-options {
   display: flex;
   flex-wrap: wrap;
