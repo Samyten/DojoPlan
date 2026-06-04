@@ -3,7 +3,7 @@
 -- Safe to rerun: NOT EXISTS prevents duplicates for the same date/time/title.
 
 with days as (
-  select generate_series('2026-09-08'::date, '2027-07-02'::date, interval '1 day')::date as day
+  select generate_series('2026-09-07'::date, '2027-07-02'::date, interval '1 day')::date as day
 ),
 templates(day_of_week, title, start_time, end_time, location, lesson_plan, notes) as (
   values

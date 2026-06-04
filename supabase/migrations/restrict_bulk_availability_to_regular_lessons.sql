@@ -1,5 +1,6 @@
--- Adds a narrow RPC for bulk availability and admin-on-behalf availability edits.
--- This keeps direct availability RLS narrow while deriving the trusted actor from auth.uid().
+-- Replaces the bulk availability RPC so it accepts only regular recurring lesson sessions.
+-- This prevents exceptional/manual lessons from being changed through bulk availability.
+-- Safe to run on production: create or replace updates only this narrow function.
 
 create or replace function public.bulk_update_availability(
   p_target_teacher_id uuid,

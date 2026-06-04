@@ -18,7 +18,7 @@ export const dojoSeasons: DojoSeason[] = [
     id: '2026-2027',
     label: 'Saison 2026-2027',
     schoolStartDate: '2026-09-01',
-    seasonStartDate: '2026-09-08',
+    seasonStartDate: '2026-09-07',
     seasonEndDate: '2027-07-02',
   },
 ];

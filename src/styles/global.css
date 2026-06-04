@@ -776,6 +776,30 @@ button:disabled {
   color: var(--accent-strong);
 }
 
+.status-option input[value='present']:checked + span {
+  border-color: var(--green);
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.status-option input[value='absent']:checked + span {
+  border-color: var(--red);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.status-option input[value='maybe']:checked + span {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.status-option input[value='unknown']:checked + span {
+  border-color: var(--line);
+  background: var(--gray-soft);
+  color: var(--muted);
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;

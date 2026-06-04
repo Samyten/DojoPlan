@@ -202,11 +202,26 @@ begin
   into v_distinct_input_count
   from (select distinct unnest(coalesce(p_session_ids, array[]::uuid[])) as id) input_ids;
 
-  with selected_sessions as (
+  with recurring_templates(day_of_week, title, start_time, end_time) as (
+    values
+      (1, 'Enfants 10 à 14 ans', '18:00'::time, '19:15'::time),
+      (1, 'Adultes', '19:15'::time, '20:30'::time),
+      (1, 'Karaté Contact', '20:30'::time, '21:30'::time),
+      (3, 'Enfants de 5 à 9 ans', '17:15'::time, '18:30'::time),
+      (4, 'Enfants 10 à 14 ans', '18:00'::time, '19:15'::time),
+      (4, 'Adultes', '19:15'::time, '20:30'::time),
+      (4, 'Karaté Contact', '20:30'::time, '21:30'::time)
+  ),
+  selected_sessions as (
     select sessions.id
     from public.sessions
     join (select distinct unnest(coalesce(p_session_ids, array[]::uuid[])) as id) input_ids
       on input_ids.id = sessions.id
+    join recurring_templates
+      on recurring_templates.title = sessions.title
+      and recurring_templates.start_time = sessions.start_time
+      and recurring_templates.end_time = sessions.end_time
+      and recurring_templates.day_of_week = extract(isodow from sessions.date)::int
   )
   select count(*)
   into v_matched_count
@@ -216,11 +231,26 @@ begin
     raise exception 'One or more sessions were not found.';
   end if;
 
-  with selected_sessions as (
+  with recurring_templates(day_of_week, title, start_time, end_time) as (
+    values
+      (1, 'Enfants 10 à 14 ans', '18:00'::time, '19:15'::time),
+      (1, 'Adultes', '19:15'::time, '20:30'::time),
+      (1, 'Karaté Contact', '20:30'::time, '21:30'::time),
+      (3, 'Enfants de 5 à 9 ans', '17:15'::time, '18:30'::time),
+      (4, 'Enfants 10 à 14 ans', '18:00'::time, '19:15'::time),
+      (4, 'Adultes', '19:15'::time, '20:30'::time),
+      (4, 'Karaté Contact', '20:30'::time, '21:30'::time)
+  ),
+  selected_sessions as (
     select sessions.id
     from public.sessions
     join (select distinct unnest(coalesce(p_session_ids, array[]::uuid[])) as id) input_ids
       on input_ids.id = sessions.id
+    join recurring_templates
+      on recurring_templates.title = sessions.title
+      and recurring_templates.start_time = sessions.start_time
+      and recurring_templates.end_time = sessions.end_time
+      and recurring_templates.day_of_week = extract(isodow from sessions.date)::int
   ),
   updated as (
     update public.availability

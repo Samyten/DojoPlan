@@ -40,8 +40,8 @@ La génération automatique ne crée pas de cours réguliers pendant les vacance
 Saison active : 2026-2027.
 
 - Rentrée scolaire Zone C : 1 septembre 2026.
-- Début de saison dojo : 8 septembre 2026.
-- Premier cours régulier généré : mercredi 9 septembre 2026.
+- Début de saison dojo : 7 septembre 2026.
+- Premier cours régulier généré : lundi 7 septembre 2026.
 - Derniers cours réguliers générés : jeudi 1 juillet 2027.
 - Aucun cours régulier n'est généré à partir des vacances d'été du 3 juillet 2027.
 
@@ -50,6 +50,7 @@ Saison active : 2026-2027.
 - Un professeur peut modifier uniquement sa propre disponibilité.
 - Un admin ou super admin peut modifier la disponibilité d'un autre professeur, depuis un panneau replié dans le détail du cours.
 - Le panneau `Renseigner plusieurs disponibilités` est replié par défaut et permet d'appliquer un statut à plusieurs cours filtrés par période, jour et type de cours.
+- Les disponibilités en série ne ciblent que les cours réguliers du planning principal. Les cours exceptionnels créés manuellement ne sont pas proposés dans le filtre et ne doivent pas être modifiés en série.
 - Par défaut, les disponibilités déjà renseignées ne sont pas remplacées. La case `Remplacer également les disponibilités déjà renseignées` doit être cochée pour écraser des réponses existantes.
 - Les opérations en série créent une seule entrée résumée dans les modifications récentes.
 
@@ -149,7 +150,9 @@ Pour une base Supabase déjà utilisée en production, ne relancez pas `supabase
 Pour cette version, exécutez uniquement ces migrations additives dans Supabase SQL Editor, dans cet ordre :
 
 1. `supabase/migrations/add_karate_contact_sessions_2026_2027.sql`
-2. `supabase/migrations/add_bulk_availability_rpc.sql`
+2. `supabase/migrations/add_regular_sessions_2026_09_07.sql`
+3. `supabase/migrations/add_bulk_availability_rpc.sql`
+4. `supabase/migrations/restrict_bulk_availability_to_regular_lessons.sql`
 
 Ensuite :
 

@@ -7,6 +7,7 @@ import type {
   Teacher,
 } from '../../types';
 import { formatLongDate } from '../../utils/dates';
+import { isRecurringLessonSession, recurringLessonTitles } from '../../utils/recurringLessons';
 import { canManageSessions } from '../../utils/roles';
 
 const statusOptions: AvailabilityStatus[] = ['present', 'absent', 'maybe', 'unknown'];
@@ -79,15 +80,12 @@ export function BulkAvailabilityPanel({
       ),
     [availability, effectiveTargetTeacherId],
   );
-  const lessonTypes = useMemo(
-    () => [...new Set(sessions.map((session) => session.title))].sort((left, right) => left.localeCompare(right, 'fr')),
-    [sessions],
-  );
   const matchingSessions = useMemo(
     () =>
       sessions.filter((session) => {
         const weekday = new Date(`${session.date}T00:00:00`).getDay();
         return (
+          isRecurringLessonSession(session) &&
           (!startDate || session.date >= startDate) &&
           (!endDate || session.date <= endDate) &&
           selectedWeekdays.includes(weekday) &&
@@ -151,7 +149,7 @@ export function BulkAvailabilityPanel({
             <select value={targetTeacherId} onChange={(event) => setTargetTeacherId(event.target.value)}>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
-                  {teacher.name}
+                {teacher.name}
                 </option>
               ))}
             </select>
@@ -173,7 +171,7 @@ export function BulkAvailabilityPanel({
             <span>Type de cours</span>
             <select value={lessonType} onChange={(event) => setLessonType(event.target.value)}>
               <option value="all">Tous les cours</option>
-              {lessonTypes.map((title) => (
+              {recurringLessonTitles.map((title) => (
                 <option key={title} value={title}>
                   {title}
                 </option>

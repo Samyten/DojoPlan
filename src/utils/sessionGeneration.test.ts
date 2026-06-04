@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { recurringLessonTemplates } from '../data/recurringSchedule';
 import { activeDojoSeason } from '../data/seasonConfig';
+import { isRecurringLessonSession, recurringLessonTitles } from './recurringLessons';
 import { generateRecurringSessions, generateSeasonSessions } from './sessionGeneration';
 
 describe('recurring lesson schedule', () => {
@@ -101,14 +102,14 @@ describe('generateRecurringSessions', () => {
     expect(sessions.map((session) => session.date)).toContain('2026-05-27');
   });
 
-  it('starts the 2026-2027 season on the first valid lesson after rentrée week', () => {
+  it('starts the 2026-2027 season on Monday 7 September', () => {
     const sessions = generateSeasonSessions(activeDojoSeason);
 
-    expect(sessions[0]).toMatchObject({
-      date: '2026-09-09',
-      title: 'Enfants de 5 à 9 ans',
-      startTime: '17:15',
-    });
+    expect(sessions.slice(0, 3).map((session) => `${session.date} ${session.startTime} ${session.title}`)).toEqual([
+      '2026-09-07 18:00 Enfants 10 à 14 ans',
+      '2026-09-07 19:15 Adultes',
+      '2026-09-07 20:30 Karaté Contact',
+    ]);
   });
 
   it('generates the 2026-2027 season until before summer holidays', () => {
@@ -151,6 +152,31 @@ describe('generateRecurringSessions', () => {
           session.date >= '2026-10-17' &&
           session.date <= '2026-11-02',
       ),
+    ).toBe(false);
+  });
+
+  it('identifies only regular lesson templates as bulk-editable recurring lessons', () => {
+    expect(recurringLessonTitles).toEqual([
+      'Adultes',
+      'Enfants 10 à 14 ans',
+      'Enfants de 5 à 9 ans',
+      'Karaté Contact',
+    ]);
+    expect(
+      isRecurringLessonSession({
+        date: '2026-09-07',
+        title: 'Karaté Contact',
+        startTime: '20:30',
+        endTime: '21:30',
+      }),
+    ).toBe(true);
+    expect(
+      isRecurringLessonSession({
+        date: '2026-09-12',
+        title: 'Stage exceptionnel',
+        startTime: '10:00',
+        endTime: '12:00',
+      }),
     ).toBe(false);
   });
 });
