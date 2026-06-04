@@ -388,28 +388,62 @@ export async function updateAvailability(
   comment = '',
   actorTeacherId = teacherId,
 ): Promise<Availability> {
-  const { error } = await getSupabaseClient().rpc('bulk_update_availability', {
-    p_target_teacher_id: teacherId,
-    p_session_ids: [sessionId],
-    p_status: status,
-    p_comment: comment,
-    p_overwrite_existing: true,
-  });
+  const [session, actor, targetTeacher, existing] = await Promise.all([
+    getSessionOrThrow(sessionId),
+    getCurrentTeacherOrThrow(),
+    getTeacherOrThrow(teacherId),
+    getExistingAvailability(sessionId, teacherId),
+  ]);
+  void actorTeacherId;
+  const previousStatus = existing?.status ?? 'unknown';
+  const previousComment = existing?.comment ?? '';
+  const now = new Date().toISOString();
+
+  if (actor.id !== targetTeacher.id && actor.role !== 'admin' && actor.role !== 'super_admin') {
+    throw new Error('Only admins can update availability for another teacher.');
+  }
+
+  const { data, error } = await getSupabaseClient()
+    .from('availability')
+    .upsert(
+      {
+        id: existing?.id,
+        session_id: sessionId,
+        teacher_id: teacherId,
+        status,
+        comment,
+        updated_at: now,
+      },
+      { onConflict: 'session_id,teacher_id' },
+    )
+    .select('id,session_id,teacher_id,status,comment,updated_at')
+    .single();
 
   if (error) {
     throw error;
   }
 
-  // Keep the repository signature stable; the RPC derives the trusted actor from auth.uid().
-  void actorTeacherId;
-
-  const availability = await getExistingAvailability(sessionId, teacherId);
-
-  if (!availability) {
-    throw new Error('Availability update failed.');
+  if (previousStatus !== status || previousComment !== comment) {
+    await createChangeLogEntry({
+      sessionId,
+      teacherId,
+      actorTeacherId: actor.id,
+      type: 'availability_changed',
+      description: describeAvailabilityChange(
+        actor.name,
+        targetTeacher.name,
+        session,
+        status,
+        previousStatus !== status,
+      ),
+      metadata: {
+        previousStatus,
+        nextStatus: status,
+      },
+    });
   }
 
-  return availability;
+  return mapAvailabilityRow(data as AvailabilityRow);
 }
 
 export async function bulkUpdateAvailability(
@@ -485,6 +519,29 @@ async function getTeacherOrThrow(teacherId: string) {
 
   if (error || !data) {
     throw error ?? new Error('Unknown teacher.');
+  }
+
+  return mapTeacherRow(data as TeacherRow);
+}
+
+async function getCurrentTeacherOrThrow() {
+  const {
+    data: { user },
+    error: authError,
+  } = await getSupabaseClient().auth.getUser();
+
+  if (authError || !user) {
+    throw authError ?? new Error('Authentication required.');
+  }
+
+  const { data, error } = await getSupabaseClient()
+    .from('teachers')
+    .select('id,auth_user_id,name,email,role,display_order,created_at')
+    .eq('auth_user_id', user.id)
+    .single();
+
+  if (error || !data) {
+    throw error ?? new Error('No linked teacher profile found for this authenticated user.');
   }
 
   return mapTeacherRow(data as TeacherRow);
@@ -627,6 +684,50 @@ function mapBulkAvailabilityResult(row: BulkAvailabilityResultRow): BulkAvailabi
 
 function formatSessionForChange(session: Session) {
   return `${session.title.toLowerCase()} du ${formatCourseDate(session.date)}`;
+}
+
+function availabilitySentence(status: AvailabilityStatus) {
+  switch (status) {
+    case 'present':
+      return 'qu’il sera présent';
+    case 'absent':
+      return 'qu’il sera absent';
+    case 'maybe':
+      return 'qu’il sera peut-être présent';
+    case 'unknown':
+      return "qu’il n'a pas encore renseigné sa disponibilité";
+  }
+}
+
+function availabilityTargetSentence(status: AvailabilityStatus) {
+  switch (status) {
+    case 'present':
+      return 'sera présent';
+    case 'absent':
+      return 'sera absent';
+    case 'maybe':
+      return 'sera peut-être présent';
+    case 'unknown':
+      return "n'a pas encore renseigné sa disponibilité";
+  }
+}
+
+function describeAvailabilityChange(
+  actorName: string,
+  targetName: string,
+  session: Session,
+  nextStatus: AvailabilityStatus,
+  statusChanged: boolean,
+) {
+  if (actorName !== targetName) {
+    return `${actorName} a indiqué que ${targetName} ${availabilityTargetSentence(nextStatus)} pour le ${formatSessionForChange(session)}.`;
+  }
+
+  if (!statusChanged) {
+    return `${actorName} a modifié sa disponibilité pour le ${formatSessionForChange(session)}.`;
+  }
+
+  return `${actorName} a indiqué ${availabilitySentence(nextStatus)} pour le ${formatSessionForChange(session)}.`;
 }
 
 function formatSessionForDelete(session: Session) {
