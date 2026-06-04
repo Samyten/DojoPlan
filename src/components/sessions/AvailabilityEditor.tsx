@@ -26,7 +26,6 @@ export function AvailabilityEditor({
   onSubmit,
 }: AvailabilityEditorProps) {
   const selectedStatus = availability?.status ?? 'unknown';
-  const comment = availability?.comment ?? '';
 
   return (
     <form
@@ -34,10 +33,7 @@ export function AvailabilityEditor({
       onSubmit={(event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        onSubmit(
-          formData.get('status') as AvailabilityStatus,
-          String(formData.get('comment') ?? ''),
-        );
+        onSubmit(formData.get('status') as AvailabilityStatus, '');
       }}
     >
       <div className="inline-heading">
@@ -57,11 +53,6 @@ export function AvailabilityEditor({
           </label>
         ))}
       </fieldset>
-
-      <label className="field">
-        <span>Commentaire</span>
-        <input name="comment" defaultValue={comment} placeholder="Note facultative" />
-      </label>
 
       <button className="primary-button" type="submit" disabled={isSaving}>
         {isSaving ? 'Enregistrement...' : `Enregistrer ma disponibilité pour ${sessionTitle}`}

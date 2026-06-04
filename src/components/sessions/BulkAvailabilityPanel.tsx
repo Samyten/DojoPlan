@@ -64,7 +64,6 @@ export function BulkAvailabilityPanel({
   const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([1, 3, 4]);
   const [lessonType, setLessonType] = useState('all');
   const [status, setStatus] = useState<AvailabilityStatus>('absent');
-  const [comment, setComment] = useState('');
   const [overwriteExisting, setOverwriteExisting] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -96,8 +95,7 @@ export function BulkAvailabilityPanel({
   );
   const updatableSessions = matchingSessions.filter((session) => {
     const existing = availabilityBySessionForTarget.get(session.id);
-    const hasExplicitExisting =
-      Boolean(existing) && (existing?.status !== 'unknown' || Boolean(existing?.comment?.trim()));
+    const hasExplicitExisting = Boolean(existing) && existing?.status !== 'unknown';
 
     return overwriteExisting || !hasExplicitExisting;
   });
@@ -130,7 +128,7 @@ export function BulkAvailabilityPanel({
       targetTeacherId: effectiveTargetTeacherId,
       sessionIds: updatableSessions.map((session) => session.id),
       status,
-      comment,
+      comment: '',
       overwriteExisting,
     });
 
@@ -215,11 +213,6 @@ export function BulkAvailabilityPanel({
             </label>
           ))}
         </fieldset>
-
-        <label className="field">
-          <span>Commentaire</span>
-          <input value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Note facultative" />
-        </label>
 
         <label className="checkbox-line">
           <input

@@ -90,7 +90,6 @@ export function SessionDetails({
           <LessonPlanEditor
             key={`${session.id}-${session.updatedAt}`}
             session={session}
-            currentTeacher={currentTeacher}
             isSaving={isSaving}
             onSaveLessonPlan={onSaveLessonPlan}
           />
@@ -149,7 +148,6 @@ export function SessionDetails({
               <article key={teacher.id} className="teacher-availability-row">
                 <div>
                   <strong>{teacher.name}</strong>
-                  <small>{teacherAvailability?.comment || 'Aucun commentaire'}</small>
                 </div>
                 <StatusBadge status={teacherAvailability?.status ?? 'unknown'} />
               </article>
@@ -199,7 +197,7 @@ function AdminAvailabilityEditor({
           await onSaveAvailabilityForTeacher(
             String(formData.get('teacherId') ?? ''),
             formData.get('status') as AvailabilityStatus,
-            String(formData.get('comment') ?? ''),
+            '',
           );
         }}
       >
@@ -233,11 +231,6 @@ function AdminAvailabilityEditor({
           ))}
         </fieldset>
 
-        <label className="field">
-          <span>Commentaire</span>
-          <input name="comment" defaultValue={targetAvailability?.comment ?? ''} placeholder="Note facultative" />
-        </label>
-
         <button className="primary-button" type="submit" disabled={isSaving || !targetTeacherId}>
           {isSaving ? 'Enregistrement...' : 'Enregistrer pour ce professeur'}
         </button>
@@ -248,14 +241,12 @@ function AdminAvailabilityEditor({
 
 interface LessonPlanEditorProps {
   session: Session;
-  currentTeacher: Teacher;
   isSaving: boolean;
   onSaveLessonPlan: (lessonPlan: string) => void;
 }
 
 function LessonPlanEditor({
   session,
-  currentTeacher,
   isSaving,
   onSaveLessonPlan,
 }: LessonPlanEditorProps) {
@@ -280,11 +271,11 @@ function LessonPlanEditor({
           rows={5}
         />
       </label>
-      <p className={lessonHasChanges ? 'form-context form-context--changed' : 'form-context'}>
-        {lessonHasChanges
-          ? `Modifications non enregistrées pour ${session.title}.`
-          : `Cet enregistrement modifiera ${session.title} avec ${currentTeacher.name}.`}
-      </p>
+      {lessonHasChanges ? (
+        <p className="form-context form-context--changed">
+          Modifications non enregistrées pour {session.title}.
+        </p>
+      ) : null}
       {!savedLessonContent.trim() ? (
         <p className="empty-state">Aucun contenu de cours n'a encore été ajouté.</p>
       ) : null}
