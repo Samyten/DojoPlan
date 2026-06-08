@@ -35,6 +35,7 @@ export function SessionCalendar({
 }: SessionCalendarProps) {
   const sessionsByDate = groupSessionsByDate(sessions);
   const calendarDays = getCalendarDays(currentMonth);
+  const today = toISODate(new Date());
   const selectedDaySessions = selectedDate ? sessionsByDate.get(selectedDate) ?? [] : [];
   const selectedHoliday = selectedDate ? getHolidayInfo(selectedDate) : undefined;
 
@@ -71,6 +72,7 @@ export function SessionCalendar({
           const holiday = getHolidayInfo(date);
           const isSelected = selectedDate === date;
           const isOutsideMonth = day.getMonth() !== currentMonth.getMonth();
+          const isPast = date < today;
 
           return (
             <button
@@ -82,6 +84,7 @@ export function SessionCalendar({
                 isOutsideMonth ? 'calendar-day--muted' : '',
                 daySessions.length ? 'calendar-day--has-sessions' : '',
                 holiday ? 'calendar-day--holiday' : '',
+                isPast ? 'calendar-day--past' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}

@@ -394,6 +394,29 @@ button:disabled {
   background: #f2eee6;
 }
 
+.calendar-day--past {
+  background: #e8edf0;
+  color: #717b82;
+}
+
+.calendar-day--past.calendar-day--has-sessions {
+  background: #e3e9ec;
+}
+
+.calendar-day--past.calendar-day--holiday {
+  background: #e4e9ea;
+  box-shadow: inset 0 3px 0 #c6b9a5;
+}
+
+.calendar-day--past .calendar-session-dot {
+  background: #d2dade;
+  color: #59666d;
+}
+
+.calendar-day--past .calendar-holiday-label {
+  color: #817664;
+}
+
 .calendar-day--selected {
   outline: 3px solid var(--accent);
   outline-offset: -3px;
