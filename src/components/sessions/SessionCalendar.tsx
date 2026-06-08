@@ -73,11 +73,13 @@ export function SessionCalendar({
           const isSelected = selectedDate === date;
           const isOutsideMonth = day.getMonth() !== currentMonth.getMonth();
           const isPast = date < today;
+          const isToday = date === today;
 
           return (
             <button
               key={date}
               type="button"
+              aria-current={isToday ? 'date' : undefined}
               className={[
                 'calendar-day',
                 isSelected ? 'calendar-day--selected' : '',
@@ -85,6 +87,7 @@ export function SessionCalendar({
                 daySessions.length ? 'calendar-day--has-sessions' : '',
                 holiday ? 'calendar-day--holiday' : '',
                 isPast ? 'calendar-day--past' : '',
+                isToday ? 'calendar-day--today' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}

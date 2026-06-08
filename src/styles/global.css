@@ -417,9 +417,27 @@ button:disabled {
   color: #817664;
 }
 
+.calendar-day--today {
+  box-shadow: inset 0 0 0 3px #53616a;
+}
+
+.calendar-day--today .calendar-day__number {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: #53616a;
+  color: white;
+}
+
 .calendar-day--selected {
   outline: 3px solid var(--accent);
   outline-offset: -3px;
+}
+
+.calendar-day--selected.calendar-day--today {
+  box-shadow: none;
 }
 
 .calendar-day__number {

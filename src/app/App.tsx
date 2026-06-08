@@ -49,17 +49,9 @@ export function App() {
   const [initialData] = useState<DojoDataState>(() => getDojoDataSnapshot());
   const [data, setData] = useState<DojoDataState>(initialData);
   const [activeView, setActiveView] = useState<AppView>('sessions');
-  const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
-    initialData.sessions[0]?.id,
-  );
-  const [selectedDate, setSelectedDate] = useState<string | undefined>(
-    initialData.sessions[0]?.date,
-  );
-  const [currentMonth, setCurrentMonth] = useState<Date>(() =>
-    startOfMonth(
-      parseLocalDate(initialData.sessions[0]?.date ?? new Date().toISOString().slice(0, 10)),
-    ),
-  );
+  const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
+  const [selectedDate, setSelectedDate] = useState<string | undefined>();
+  const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
@@ -70,14 +62,7 @@ export function App() {
         return current;
       }
 
-      return nextData.sessions[0]?.id;
-    });
-    setSelectedDate((current) => {
-      if (current && nextData.sessions.some((session) => session.date === current)) {
-        return current;
-      }
-
-      return nextData.sessions[0]?.date;
+      return undefined;
     });
   }
 
