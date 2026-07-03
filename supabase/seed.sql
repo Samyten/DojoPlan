@@ -6,13 +6,14 @@ truncate table change_log_entries, availability, sessions, teachers restart iden
 
 insert into teachers (id, auth_user_id, name, email, role, display_order) values
   ('11111111-1111-4111-8111-111111111111', null, 'Marc Piperno', 'marc.piperno@dojo.local', 'admin', 1),
-  ('22222222-2222-4222-8222-222222222222', null, 'Christian Martinez', 'christian.martinez@dojo.local', 'teacher', 2),
-  ('33333333-3333-4333-8333-333333333333', null, 'Jean-René FOULQUIER', 'jean-rene.foulquier@dojo.local', 'teacher', 3),
+  ('22222222-2222-4222-8222-222222222222', null, 'Christian Martinez', 'christian.martinez20@wanadoo.fr', 'teacher', 2),
+  ('33333333-3333-4333-8333-333333333333', null, 'Jean-René FOULQUIER', 'jeanrene.foulquier@sfr.fr', 'teacher', 3),
   ('44444444-4444-4444-8444-444444444444', null, 'Hugo Amador', 'hugo.amador@dojo.local', 'teacher', 4),
-  ('55555555-5555-4555-8555-555555555555', null, 'Matthieu Piperno', 'matthieu.piperno@dojo.local', 'teacher', 5),
+  ('55555555-5555-4555-8555-555555555555', null, 'Matthieu Piperno', 'matthieupiperno@gmail.com', 'teacher', 5),
   ('66666666-6666-4666-8666-666666666666', null, 'Samy Belkacemi', 'samy.belkacemi@dojo.local', 'super_admin', 6),
   ('77777777-7777-4777-8777-777777777777', null, 'Lohan Amador', 'lohan.amador@dojo.local', 'teacher', 7),
-  ('88888888-8888-4888-8888-888888888888', null, 'Camille Piperno', 'camille.piperno@dojo.local', 'teacher', 8);
+  ('88888888-8888-4888-8888-888888888888', null, 'Camille Piperno', 'camille.piperno@icloud.com', 'teacher', 8),
+  ('99999999-9999-4999-8999-999999999999', null, 'Sébastien Calvet', 'sebastien.calvet66@free.fr', 'teacher', 9);
 
 -- After creating Auth users in the Supabase dashboard, link them like this:
 -- update teachers set auth_user_id = '<auth.users.id>' where email = '<real-teacher-email>';

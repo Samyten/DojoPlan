@@ -12,14 +12,14 @@ export const mockTeachers: Teacher[] = [
   {
     id: 'teacher-christian-martinez',
     name: 'Christian Martinez',
-    email: 'christian.martinez@dojo.local',
+    email: 'christian.martinez20@wanadoo.fr',
     role: 'teacher',
     displayOrder: 2,
   },
   {
     id: 'teacher-jean-rene-foulquier',
     name: 'Jean-René FOULQUIER',
-    email: 'jean-rene.foulquier@dojo.local',
+    email: 'jeanrene.foulquier@sfr.fr',
     role: 'teacher',
     displayOrder: 3,
   },
@@ -33,7 +33,7 @@ export const mockTeachers: Teacher[] = [
   {
     id: 'teacher-matthieu-piperno',
     name: 'Matthieu Piperno',
-    email: 'matthieu.piperno@dojo.local',
+    email: 'matthieupiperno@gmail.com',
     role: 'teacher',
     displayOrder: 5,
   },
@@ -54,9 +54,16 @@ export const mockTeachers: Teacher[] = [
   {
     id: 'teacher-camille-piperno',
     name: 'Camille Piperno',
-    email: 'camille.piperno@dojo.local',
+    email: 'camille.piperno@icloud.com',
     role: 'teacher',
     displayOrder: 8,
+  },
+  {
+    id: 'teacher-sebastien-calvet',
+    name: 'Sébastien Calvet',
+    email: 'sebastien.calvet66@free.fr',
+    role: 'teacher',
+    displayOrder: 9,
   },
 ];
 
