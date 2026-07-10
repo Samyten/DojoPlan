@@ -22,6 +22,12 @@ export const getAllAvailability: DojoRepository['getAllAvailability'] = (...args
 export const getRecentChanges: DojoRepository['getRecentChanges'] = (...args) =>
   getRepository().getRecentChanges(...args);
 
+export const getNotificationReadAt: DojoRepository['getNotificationReadAt'] = (...args) =>
+  getRepository().getNotificationReadAt(...args);
+
+export const markNotificationsRead: DojoRepository['markNotificationsRead'] = (...args) =>
+  getRepository().markNotificationsRead(...args);
+
 export const getDojoData: DojoRepository['getDojoData'] = (...args) =>
   getRepository().getDojoData(...args);
 

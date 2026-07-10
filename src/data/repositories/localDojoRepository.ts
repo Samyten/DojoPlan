@@ -16,6 +16,7 @@ import { compareSessionDateTime, formatCourseDate } from '../../utils/dates';
 import { assertValidSessionInput } from '../../utils/sessionValidation';
 
 const STORAGE_KEY = 'dojo-planning.mock-state.v8';
+const NOTIFICATION_READ_STORAGE_KEY = 'dojo-planning.notification-read.v1';
 
 function cloneState(state: DojoDataState): DojoDataState {
   return structuredClone(state);
@@ -50,6 +51,27 @@ function loadState(): DojoDataState {
 function saveState(state: DojoDataState) {
   if (canUseLocalStorage()) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+}
+
+function loadNotificationReadState(): Record<string, string> {
+  if (!canUseLocalStorage()) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(window.localStorage.getItem(NOTIFICATION_READ_STORAGE_KEY) ?? '{}') as Record<
+      string,
+      string
+    >;
+  } catch {
+    return {};
+  }
+}
+
+function saveNotificationReadState(state: Record<string, string>) {
+  if (canUseLocalStorage()) {
+    window.localStorage.setItem(NOTIFICATION_READ_STORAGE_KEY, JSON.stringify(state));
   }
 }
 
@@ -227,6 +249,31 @@ export async function getAllAvailability(): Promise<Availability[]> {
 
 export async function getRecentChanges(): Promise<ChangeLogEntry[]> {
   return toSnapshot(loadState()).changes;
+}
+
+export async function getNotificationReadAt(teacherId: string): Promise<string | undefined> {
+  return loadNotificationReadState()[teacherId];
+}
+
+export async function markNotificationsRead(
+  teacherId: string,
+  readThrough: string,
+): Promise<string> {
+  const state = loadState();
+
+  if (!findTeacher(state, teacherId)) {
+    throw new Error('Cannot update notifications for an unknown teacher.');
+  }
+
+  const readState = loadNotificationReadState();
+  const nextReadAt =
+    readState[teacherId] && readState[teacherId] > readThrough
+      ? readState[teacherId]
+      : readThrough;
+
+  readState[teacherId] = nextReadAt;
+  saveNotificationReadState(readState);
+  return nextReadAt;
 }
 
 export async function getDojoData(): Promise<DojoDataState> {
@@ -658,5 +705,8 @@ export async function deleteSession(sessionId: string, actorTeacherId: string): 
 export async function resetMockData(): Promise<DojoDataState> {
   const state = cloneState(mockDojoData);
   saveState(state);
+  if (canUseLocalStorage()) {
+    window.localStorage.removeItem(NOTIFICATION_READ_STORAGE_KEY);
+  }
   return toSnapshot(state);
 }

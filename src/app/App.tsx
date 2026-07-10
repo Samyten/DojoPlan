@@ -17,6 +17,8 @@ import {
   bulkUpdateAvailability,
   getDojoData,
   getDojoDataSnapshot,
+  getNotificationReadAt,
+  markNotificationsRead,
   reorderTeachers,
   resetMockData,
   updateAvailability,
@@ -54,6 +56,9 @@ export function App() {
   const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [notificationReadAt, setNotificationReadAt] = useState<string | undefined>();
+  const [notificationReadTeacherId, setNotificationReadTeacherId] = useState<string | undefined>();
+  const [visibleUnreadChangeIds, setVisibleUnreadChangeIds] = useState<Set<string>>(() => new Set());
 
   function applyLoadedData(nextData: DojoDataState) {
     setData(nextData);
@@ -90,6 +95,36 @@ export function App() {
     };
   }, [currentTeacher, isSupabaseMode]);
 
+  useEffect(() => {
+    if (!currentTeacher) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void getNotificationReadAt(currentTeacher.id)
+      .then((readAt) => {
+        if (!cancelled) {
+          setNotificationReadAt(readAt);
+          setNotificationReadTeacherId(currentTeacher.id);
+        }
+      })
+      .catch((readError: unknown) => {
+        if (!cancelled) {
+          setError(
+            getFriendlyErrorMessage(
+              readError,
+              "Le suivi des notifications n'a pas pu être chargé.",
+            ),
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentTeacher]);
+
   async function refreshData() {
     const nextData = await getDojoData();
     applyLoadedData(nextData);
@@ -105,6 +140,47 @@ export function App() {
     () => data.availability.filter((availability) => availability.sessionId === selectedSessionId),
     [data.availability, selectedSessionId],
   );
+
+  const unreadChanges = useMemo(() => {
+    if (!currentTeacher || notificationReadTeacherId !== currentTeacher.id) {
+      return [];
+    }
+
+    return data.changes.filter(
+      (change) => !notificationReadAt || change.createdAt > notificationReadAt,
+    );
+  }, [currentTeacher, data.changes, notificationReadAt, notificationReadTeacherId]);
+
+  function handleChangeView(view: AppView) {
+    setActiveView(view);
+
+    if (view !== 'changes') {
+      setVisibleUnreadChangeIds(new Set());
+      return;
+    }
+
+    setVisibleUnreadChangeIds(new Set(unreadChanges.map((change) => change.id)));
+
+    const latestChangeAt = data.changes.reduce<string | undefined>(
+      (latest, change) => (!latest || change.createdAt > latest ? change.createdAt : latest),
+      undefined,
+    );
+
+    if (!currentTeacher || !latestChangeAt || !unreadChanges.length) {
+      return;
+    }
+
+    void markNotificationsRead(currentTeacher.id, latestChangeAt)
+      .then(setNotificationReadAt)
+      .catch((readError: unknown) => {
+        setError(
+          getFriendlyErrorMessage(
+            readError,
+            "Les notifications n'ont pas pu être marquées comme lues.",
+          ),
+        );
+      });
+  }
 
   function handleSelectDate(date: string) {
     const sessionsForDate = data.sessions.filter((session) => session.date === date);
@@ -410,7 +486,11 @@ async function handleSaveAvailability(status: AvailabilityStatus, comment: strin
         onChangeTeacher={setLocalTeacherId}
         onSignOut={() => void signOut()}
       />
-      <MainNav activeView={activeView} onChangeView={setActiveView} />
+      <MainNav
+        activeView={activeView}
+        unreadChangeCount={unreadChanges.length}
+        onChangeView={handleChangeView}
+      />
 
       {error ? <p className="error-banner">{error}</p> : null}
 
@@ -454,7 +534,12 @@ async function handleSaveAvailability(status: AvailabilityStatus, comment: strin
 
       {activeView === 'changes' ? (
         <main>
-          <RecentChanges changes={data.changes} teachers={data.teachers} sessions={data.sessions} />
+          <RecentChanges
+            changes={data.changes}
+            teachers={data.teachers}
+            sessions={data.sessions}
+            unreadChangeIds={visibleUnreadChangeIds}
+          />
         </main>
       ) : null}
 

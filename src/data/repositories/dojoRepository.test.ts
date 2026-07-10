@@ -7,6 +7,9 @@ import {
   deleteSession,
   deleteTeacher,
   getDojoDataSnapshot,
+  getNotificationReadAt,
+  getRecentChanges,
+  markNotificationsRead,
   reorderTeachers,
   resetMockData,
   updateAvailability,
@@ -399,6 +402,25 @@ describe('dojoRepository lesson content updates', () => {
     expect(updatedSession.lessonPlan).toBe('');
     expect(snapshot.sessions.find((item) => item.id === session.id)?.lessonPlan).toBe('');
     expect(snapshot.changes[0].type).toBe('lesson_plan_updated');
+  });
+});
+
+describe('dojoRepository notification read state', () => {
+  it('persists read state separately for each teacher and never moves it backwards', async () => {
+    await createSession(validSessionInput, adminId);
+    const [latestChange] = await getRecentChanges();
+
+    expect(await getNotificationReadAt(teacherId)).toBeUndefined();
+
+    const savedReadAt = await markNotificationsRead(teacherId, latestChange.createdAt);
+
+    expect(savedReadAt).toBe(latestChange.createdAt);
+    expect(await getNotificationReadAt(teacherId)).toBe(latestChange.createdAt);
+    expect(await getNotificationReadAt(adminId)).toBeUndefined();
+
+    const olderTimestamp = '2020-01-01T00:00:00.000Z';
+    await markNotificationsRead(teacherId, olderTimestamp);
+    expect(await getNotificationReadAt(teacherId)).toBe(latestChange.createdAt);
   });
 });
 

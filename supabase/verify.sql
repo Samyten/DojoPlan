@@ -49,14 +49,26 @@ select
   forcerowsecurity as rls_forced
 from pg_tables
 where schemaname = 'public'
-  and tablename in ('teachers', 'sessions', 'availability', 'change_log_entries')
+  and tablename in (
+    'teachers',
+    'sessions',
+    'availability',
+    'change_log_entries',
+    'notification_read_state'
+  )
 order by tablename;
 
 -- Installed RLS policies.
 select schemaname, tablename, policyname, cmd, roles, qual, with_check
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('teachers', 'sessions', 'availability', 'change_log_entries')
+  and tablename in (
+    'teachers',
+    'sessions',
+    'availability',
+    'change_log_entries',
+    'notification_read_state'
+  )
 order by tablename, policyname;
 
 -- Helper/RPC functions expected by the app.
@@ -87,6 +99,7 @@ select has_function_privilege(
 -- Availability and recent change counts.
 select count(*) as availability_count from public.availability;
 select count(*) as change_log_count from public.change_log_entries;
+select count(*) as notification_read_state_count from public.notification_read_state;
 
 -- Most recent changes.
 select id, type, description, session_id, teacher_id, actor_teacher_id, created_at

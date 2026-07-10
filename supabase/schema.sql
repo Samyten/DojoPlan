@@ -57,6 +57,12 @@ create table if not exists change_log_entries (
   created_at timestamptz not null default now()
 );
 
+create table if not exists notification_read_state (
+  teacher_id uuid primary key references teachers(id) on delete cascade,
+  last_read_at timestamptz not null,
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists sessions_date_idx on sessions(date);
 create index if not exists availability_session_id_idx on availability(session_id);
 create index if not exists availability_teacher_id_idx on availability(teacher_id);

@@ -51,6 +51,15 @@ export function getFriendlyErrorMessage(error: unknown, fallback: string) {
   }
 
   if (
+    normalizedMessage.includes('notification_read_state') ||
+    (normalizedMessage.includes('42p01') && normalizedMessage.includes('notification'))
+  ) {
+    return import.meta.env.DEV
+      ? "Le suivi des notifications est absent de Supabase. Exécutez supabase/migrations/add_notification_read_state.sql."
+      : "Le suivi des notifications n'est pas encore disponible. Contactez l'administrateur.";
+  }
+
+  if (
     normalizedMessage.includes('no linked teacher profile') ||
     normalizedMessage.includes('aucun profil professeur') ||
     normalizedMessage.includes('no rows')

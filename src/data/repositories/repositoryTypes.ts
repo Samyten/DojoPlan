@@ -17,6 +17,8 @@ export interface DojoRepository {
   getAvailabilityForSession(sessionId: string): Promise<Availability[]>;
   getAllAvailability(): Promise<Availability[]>;
   getRecentChanges(): Promise<DojoDataState['changes']>;
+  getNotificationReadAt(teacherId: string): Promise<string | undefined>;
+  markNotificationsRead(teacherId: string, readThrough: string): Promise<string>;
   getDojoData(): Promise<DojoDataState>;
   getDojoDataSnapshot(): DojoDataState;
   createTeacher(input: CreateTeacherInput, actorTeacherId: string): Promise<Teacher>;

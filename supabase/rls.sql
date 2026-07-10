@@ -52,6 +52,7 @@ alter table public.teachers enable row level security;
 alter table public.sessions enable row level security;
 alter table public.availability enable row level security;
 alter table public.change_log_entries enable row level security;
+alter table public.notification_read_state enable row level security;
 
 drop policy if exists "authenticated teachers can read teachers" on public.teachers;
 create policy "authenticated teachers can read teachers"
@@ -182,3 +183,28 @@ on public.change_log_entries
 for insert
 to authenticated
 with check (actor_teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can read own notification state" on public.notification_read_state;
+create policy "teachers can read own notification state"
+on public.notification_read_state
+for select
+to authenticated
+using (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can insert own notification state" on public.notification_read_state;
+create policy "teachers can insert own notification state"
+on public.notification_read_state
+for insert
+to authenticated
+with check (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can update own notification state" on public.notification_read_state;
+create policy "teachers can update own notification state"
+on public.notification_read_state
+for update
+to authenticated
+using (teacher_id = public.current_teacher_id())
+with check (teacher_id = public.current_teacher_id());
+
+revoke all on table public.notification_read_state from anon;
+grant select, insert, update on table public.notification_read_state to authenticated;

@@ -2,6 +2,7 @@ export type AppView = 'sessions' | 'changes' | 'teachers';
 
 interface MainNavProps {
   activeView: AppView;
+  unreadChangeCount: number;
   onChangeView: (view: AppView) => void;
 }
 
@@ -11,7 +12,7 @@ const navItems: Array<{ view: AppView; label: string }> = [
   { view: 'teachers', label: 'Professeurs' },
 ];
 
-export function MainNav({ activeView, onChangeView }: MainNavProps) {
+export function MainNav({ activeView, unreadChangeCount, onChangeView }: MainNavProps) {
   return (
     <nav className="main-nav" aria-label="Navigation principale">
       {navItems.map((item) => (
@@ -21,7 +22,12 @@ export function MainNav({ activeView, onChangeView }: MainNavProps) {
           type="button"
           onClick={() => onChangeView(item.view)}
         >
-          {item.label}
+          <span>{item.label}</span>
+          {item.view === 'changes' && unreadChangeCount > 0 ? (
+            <span className="nav-notification-count" aria-label={`${unreadChangeCount} non lues`}>
+              {unreadChangeCount > 99 ? '99+' : unreadChangeCount}
+            </span>
+          ) : null}
         </button>
       ))}
     </nav>

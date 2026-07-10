@@ -153,6 +153,7 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 2. `supabase/migrations/add_regular_sessions_2026_09_07.sql`
 3. `supabase/migrations/add_bulk_availability_rpc.sql`
 4. `supabase/migrations/restrict_bulk_availability_to_regular_lessons.sql`
+5. `supabase/migrations/add_notification_read_state.sql`
 
 Ensuite :
 
@@ -208,6 +209,7 @@ Un utilisateur connecté sans profil professeur lié verra une erreur en frança
 - `sessions`
 - `availability`
 - `change_log_entries`
+- `notification_read_state`
 
 Règles principales :
 
@@ -217,6 +219,7 @@ Règles principales :
 - Les professeurs peuvent modifier uniquement leur propre disponibilité.
 - Les admins et super admins peuvent modifier la disponibilité d'un autre professeur via RPC sécurisée.
 - Les entrées de journal ne peuvent être insérées qu'avec `actor_teacher_id = current_teacher_id()`.
+- Chaque professeur peut lire et modifier uniquement son propre état de lecture des notifications.
 
 Les mises à jour directes de `sessions` restent réservées aux admins. Les professeurs peuvent modifier le contenu pédagogique via `public.update_session_lesson_content`, défini dans `supabase/rpc.sql`. Cette fonction utilise `auth.uid()` pour retrouver le professeur connecté, met à jour uniquement `lesson_plan`, éventuellement `notes`, et crée une entrée de journal en français.
 
@@ -257,6 +260,7 @@ npm run test:watch
 - `supabase/rpc.sql` : RPC sécurisée pour le contenu pédagogique.
 - `supabase/migrations/add_karate_contact_sessions_2026_2027.sql` : ajoute les cours Karaté Contact manquants en production sans toucher aux autres cours.
 - `supabase/migrations/add_bulk_availability_rpc.sql` : ajoute la RPC de disponibilités en série et admin pour production existante.
+- `supabase/migrations/add_notification_read_state.sql` : ajoute le suivi privé lu/non lu des modifications récentes.
 - `supabase/verify.sql` : requêtes read-only pour vérifier le setup Supabase.
 - `docs/supabase-live-test-plan.md` : scénario manuel pour tester admin/professeur.
 
