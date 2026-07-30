@@ -14,6 +14,7 @@ Application React + Vite + TypeScript pour organiser les cours entre professeurs
 - Modification de la disponibilité d'un autre professeur réservée aux admins et super admins.
 - Modification du contenu du cours en mode local et en mode Supabase via RPC sécurisée.
 - Fil de modifications récentes.
+- Forum persistant partagé entre tous les professeurs, avec auteur et horodatage.
 - Sélecteur d'utilisateur local pour travailler sans Supabase.
 - Connexion Supabase Auth en mode Supabase.
 - Création, modification et suppression de cours réservées aux admins.
@@ -155,6 +156,7 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 4. `supabase/migrations/restrict_bulk_availability_to_regular_lessons.sql`
 5. `supabase/migrations/add_notification_read_state.sql`
 6. `supabase/migrations/link_hugo_lohan_auth_accounts.sql` (après avoir créé leurs comptes dans Supabase Authentication)
+7. `supabase/migrations/add_forum_messages.sql`
 
 Ensuite :
 
@@ -211,6 +213,7 @@ Un utilisateur connecté sans profil professeur lié verra une erreur en frança
 - `availability`
 - `change_log_entries`
 - `notification_read_state`
+- `forum_messages`
 
 Règles principales :
 
@@ -221,6 +224,9 @@ Règles principales :
 - Les admins et super admins peuvent modifier la disponibilité d'un autre professeur via RPC sécurisée.
 - Les entrées de journal ne peuvent être insérées qu'avec `actor_teacher_id = current_teacher_id()`.
 - Chaque professeur peut lire et modifier uniquement son propre état de lecture des notifications.
+- Tous les professeurs authentifiés et liés peuvent lire le Forum et publier uniquement sous leur propre identité.
+
+Le Forum conserve l'historique en base. L'interface charge les 200 messages les plus récents afin de rester légère.
 
 Les mises à jour directes de `sessions` restent réservées aux admins. Les professeurs peuvent modifier le contenu pédagogique via `public.update_session_lesson_content`, défini dans `supabase/rpc.sql`. Cette fonction utilise `auth.uid()` pour retrouver le professeur connecté, met à jour uniquement `lesson_plan`, éventuellement `notes`, et crée une entrée de journal en français.
 
@@ -251,6 +257,7 @@ npm run test:watch
 - `src/data/repositories/localDojoRepository.ts` : implémentation localStorage.
 - `src/data/repositories/supabaseDojoRepository.ts` : implémentation Supabase.
 - `src/data/repositories/repositoryTypes.ts` : contrat commun des repositories.
+- `src/components/forum/ForumPage.tsx` : historique et saisie des messages du Forum.
 - `src/data/recurringSchedule.ts` : planning hebdomadaire réel du dojo.
 - `src/data/holidayCalendar.ts` : vacances scolaires Zone C / Perpignan, jours fériés et pont de l'Ascension.
 - `src/utils/sessionGeneration.ts` : génération des cours récurrents avec exclusion des vacances.
@@ -262,6 +269,7 @@ npm run test:watch
 - `supabase/migrations/add_karate_contact_sessions_2026_2027.sql` : ajoute les cours Karaté Contact manquants en production sans toucher aux autres cours.
 - `supabase/migrations/add_bulk_availability_rpc.sql` : ajoute la RPC de disponibilités en série et admin pour production existante.
 - `supabase/migrations/add_notification_read_state.sql` : ajoute le suivi privé lu/non lu des modifications récentes.
+- `supabase/migrations/add_forum_messages.sql` : ajoute le Forum persistant et ses policies RLS.
 - `supabase/migrations/link_hugo_lohan_auth_accounts.sql` : met à jour et lie les profils Auth de Hugo et Lohan sans stocker leurs mots de passe.
 - `supabase/verify.sql` : requêtes read-only pour vérifier le setup Supabase.
 - `docs/supabase-live-test-plan.md` : scénario manuel pour tester admin/professeur.

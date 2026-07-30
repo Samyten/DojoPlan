@@ -22,6 +22,9 @@ export const getAllAvailability: DojoRepository['getAllAvailability'] = (...args
 export const getRecentChanges: DojoRepository['getRecentChanges'] = (...args) =>
   getRepository().getRecentChanges(...args);
 
+export const getForumMessages: DojoRepository['getForumMessages'] = (...args) =>
+  getRepository().getForumMessages(...args);
+
 export const getNotificationReadAt: DojoRepository['getNotificationReadAt'] = (...args) =>
   getRepository().getNotificationReadAt(...args);
 
@@ -63,6 +66,9 @@ export const bulkUpdateAvailability: DojoRepository['bulkUpdateAvailability'] = 
 
 export const updateLessonPlan: DojoRepository['updateLessonPlan'] = (...args) =>
   getRepository().updateLessonPlan(...args);
+
+export const createForumMessage: DojoRepository['createForumMessage'] = (...args) =>
+  getRepository().createForumMessage(...args);
 
 export const resetMockData: DojoRepository['resetMockData'] = (...args) =>
   getRepository().resetMockData(...args);

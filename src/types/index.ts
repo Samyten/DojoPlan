@@ -89,6 +89,14 @@ export interface ChangeLogEntry {
   metadata?: Record<string, unknown>;
 }
 
+export interface ForumMessage {
+  id: string;
+  teacherId?: string;
+  authorName: string;
+  message: string;
+  createdAt: string;
+}
+
 export interface DojoDataState {
   teachers: Teacher[];
   sessions: Session[];

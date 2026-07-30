@@ -31,6 +31,11 @@ const timestampFormatter = new Intl.DateTimeFormat(locale, {
   minute: '2-digit',
 });
 
+const forumTimestampFormatter = new Intl.DateTimeFormat(locale, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
 export function formatDateLabel(date: string) {
   return dateFormatter.format(parseLocalDate(date));
 }
@@ -41,6 +46,10 @@ export function formatLongDate(date: string) {
 
 export function formatTimestamp(timestamp: string) {
   return timestampFormatter.format(new Date(timestamp));
+}
+
+export function formatForumTimestamp(timestamp: string) {
+  return forumTimestampFormatter.format(new Date(timestamp));
 }
 
 export function formatCourseDate(date: string) {

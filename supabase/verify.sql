@@ -54,7 +54,8 @@ where schemaname = 'public'
     'sessions',
     'availability',
     'change_log_entries',
-    'notification_read_state'
+    'notification_read_state',
+    'forum_messages'
   )
 order by tablename;
 
@@ -67,7 +68,8 @@ where schemaname = 'public'
     'sessions',
     'availability',
     'change_log_entries',
-    'notification_read_state'
+    'notification_read_state',
+    'forum_messages'
   )
 order by tablename, policyname;
 
@@ -100,6 +102,13 @@ select has_function_privilege(
 select count(*) as availability_count from public.availability;
 select count(*) as change_log_count from public.change_log_entries;
 select count(*) as notification_read_state_count from public.notification_read_state;
+select count(*) as forum_message_count from public.forum_messages;
+
+-- Most recent Forum messages and their stored author names.
+select id, teacher_id, author_name, message, created_at
+from public.forum_messages
+order by created_at desc
+limit 20;
 
 -- Most recent changes.
 select id, type, description, session_id, teacher_id, actor_teacher_id, created_at

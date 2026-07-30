@@ -7,16 +7,19 @@ import { AdminCreateSessionForm } from '../components/sessions/AdminCreateSessio
 import { SessionCalendar } from '../components/sessions/SessionCalendar';
 import { SessionDetails } from '../components/sessions/SessionDetails';
 import { TeachersPage } from '../components/teachers/TeachersPage';
+import { ForumPage } from '../components/forum/ForumPage';
 import { LoginScreen } from '../auth/LoginScreen';
 import { useAuth } from '../auth/useAuth';
 import {
   createSession,
+  createForumMessage,
   createTeacher,
   deleteSession,
   deleteTeacher,
   bulkUpdateAvailability,
   getDojoData,
   getDojoDataSnapshot,
+  getForumMessages,
   getNotificationReadAt,
   markNotificationsRead,
   reorderTeachers,
@@ -31,6 +34,7 @@ import type {
   CreateSessionInput,
   CreateTeacherInput,
   DojoDataState,
+  ForumMessage,
   Teacher,
   UpdateSessionInput,
 } from '../types';
@@ -59,6 +63,10 @@ export function App() {
   const [notificationReadAt, setNotificationReadAt] = useState<string | undefined>();
   const [notificationReadTeacherId, setNotificationReadTeacherId] = useState<string | undefined>();
   const [visibleUnreadChangeIds, setVisibleUnreadChangeIds] = useState<Set<string>>(() => new Set());
+  const [forumMessages, setForumMessages] = useState<ForumMessage[]>([]);
+  const [isForumLoading, setIsForumLoading] = useState(false);
+  const [isForumSending, setIsForumSending] = useState(false);
+  const [forumError, setForumError] = useState<string | undefined>();
 
   function applyLoadedData(nextData: DojoDataState) {
     setData(nextData);
@@ -131,6 +139,21 @@ export function App() {
     return nextData;
   }
 
+  async function refreshForumMessages() {
+    setIsForumLoading(true);
+    setForumError(undefined);
+
+    try {
+      setForumMessages(await getForumMessages());
+    } catch (loadError) {
+      setForumError(
+        getFriendlyErrorMessage(loadError, "Les messages du Forum n'ont pas pu être chargés."),
+      );
+    } finally {
+      setIsForumLoading(false);
+    }
+  }
+
   const selectedSession = useMemo(
     () => data.sessions.find((session) => session.id === selectedSessionId),
     [data.sessions, selectedSessionId],
@@ -153,6 +176,10 @@ export function App() {
 
   function handleChangeView(view: AppView) {
     setActiveView(view);
+
+    if (view === 'forum') {
+      void refreshForumMessages();
+    }
 
     if (view !== 'changes') {
       setVisibleUnreadChangeIds(new Set());
@@ -197,7 +224,7 @@ export function App() {
     }
   }
 
-async function handleSaveAvailability(status: AvailabilityStatus, comment: string) {
+  async function handleSaveAvailability(status: AvailabilityStatus, comment: string) {
     if (!selectedSessionId || !currentTeacher) {
       return;
     }
@@ -212,6 +239,32 @@ async function handleSaveAvailability(status: AvailabilityStatus, comment: strin
       setError(getFriendlyErrorMessage(saveError, "La disponibilité n'a pas pu être enregistrée."));
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleSendForumMessage(message: string) {
+    if (!currentTeacher) {
+      return false;
+    }
+
+    setIsForumSending(true);
+    setForumError(undefined);
+
+    try {
+      const createdMessage = await createForumMessage(message, currentTeacher.id);
+      setForumMessages((current) =>
+        [...current.filter((item) => item.id !== createdMessage.id), createdMessage].sort((left, right) =>
+          left.createdAt.localeCompare(right.createdAt),
+        ),
+      );
+      return true;
+    } catch (saveError) {
+      setForumError(
+        getFriendlyErrorMessage(saveError, "Le message n'a pas pu être envoyé."),
+      );
+      return false;
+    } finally {
+      setIsForumSending(false);
     }
   }
 
@@ -443,6 +496,7 @@ async function handleSaveAvailability(status: AvailabilityStatus, comment: strin
       setCurrentMonth(
         startOfMonth(parseLocalDate(nextData.sessions[0]?.date ?? new Date().toISOString().slice(0, 10))),
       );
+      setForumMessages([]);
     } catch (saveError) {
       setError(getFriendlyErrorMessage(saveError, "Les données de test n'ont pas pu être réinitialisées."));
     } finally {
@@ -553,6 +607,20 @@ async function handleSaveAvailability(status: AvailabilityStatus, comment: strin
             onUpdateTeacherRole={handleUpdateTeacherRole}
             onReorderTeachers={handleReorderTeachers}
             onDeleteTeacher={handleDeleteTeacher}
+          />
+        </main>
+      ) : null}
+
+      {activeView === 'forum' ? (
+        <main>
+          <ForumPage
+            messages={forumMessages}
+            currentTeacher={currentTeacher}
+            isLoading={isForumLoading}
+            isSending={isForumSending}
+            error={forumError}
+            onRefresh={refreshForumMessages}
+            onSendMessage={handleSendForumMessage}
           />
         </main>
       ) : null}

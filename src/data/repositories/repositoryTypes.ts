@@ -6,6 +6,7 @@ import type {
   CreateTeacherInput,
   CreateSessionInput,
   DojoDataState,
+  ForumMessage,
   Session,
   Teacher,
   UpdateSessionInput,
@@ -17,6 +18,7 @@ export interface DojoRepository {
   getAvailabilityForSession(sessionId: string): Promise<Availability[]>;
   getAllAvailability(): Promise<Availability[]>;
   getRecentChanges(): Promise<DojoDataState['changes']>;
+  getForumMessages(): Promise<ForumMessage[]>;
   getNotificationReadAt(teacherId: string): Promise<string | undefined>;
   markNotificationsRead(teacherId: string, readThrough: string): Promise<string>;
   getDojoData(): Promise<DojoDataState>;
@@ -45,5 +47,6 @@ export interface DojoRepository {
   ): Promise<Availability>;
   bulkUpdateAvailability(input: BulkAvailabilityInput): Promise<BulkAvailabilityResult>;
   updateLessonPlan(sessionId: string, lessonPlan: string, actorTeacherId: string): Promise<Session>;
+  createForumMessage(message: string, actorTeacherId: string): Promise<ForumMessage>;
   resetMockData(): Promise<DojoDataState>;
 }

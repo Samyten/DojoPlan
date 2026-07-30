@@ -7,7 +7,11 @@ import type {
   Teacher,
 } from '../../types';
 import { formatLongDate } from '../../utils/dates';
-import { isRecurringLessonSession, recurringLessonTitles } from '../../utils/recurringLessons';
+import {
+  getRecurringLessonDateBounds,
+  isRecurringLessonSession,
+  recurringLessonTitles,
+} from '../../utils/recurringLessons';
 import { canManageSessions } from '../../utils/roles';
 
 const statusOptions: AvailabilityStatus[] = ['present', 'absent', 'maybe', 'unknown'];
@@ -52,12 +56,13 @@ export function BulkAvailabilityPanel({
   isSaving,
   onBulkUpdateAvailability,
 }: BulkAvailabilityPanelProps) {
-  const upcomingSessions = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return sessions.filter((session) => session.date >= today);
-  }, [sessions]);
-  const defaultStartDate = upcomingSessions[0]?.date ?? sessions[0]?.date ?? '';
-  const defaultEndDate = upcomingSessions.at(-1)?.date ?? sessions.at(-1)?.date ?? '';
+  const recurringSessions = useMemo(
+    () => sessions.filter(isRecurringLessonSession),
+    [sessions],
+  );
+  const dateBounds = useMemo(() => getRecurringLessonDateBounds(sessions), [sessions]);
+  const defaultStartDate = dateBounds.defaultStartDate;
+  const defaultEndDate = dateBounds.defaultEndDate;
   const [targetTeacherId, setTargetTeacherId] = useState(currentTeacher.id);
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
@@ -65,6 +70,7 @@ export function BulkAvailabilityPanel({
   const [lessonType, setLessonType] = useState('all');
   const [status, setStatus] = useState<AvailabilityStatus>('absent');
   const [overwriteExisting, setOverwriteExisting] = useState(false);
+  const [showOverwriteConfirmation, setShowOverwriteConfirmation] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const canTargetOthers = canManageSessions(currentTeacher);
@@ -81,17 +87,16 @@ export function BulkAvailabilityPanel({
   );
   const matchingSessions = useMemo(
     () =>
-      sessions.filter((session) => {
+      recurringSessions.filter((session) => {
         const weekday = new Date(`${session.date}T00:00:00`).getDay();
         return (
-          isRecurringLessonSession(session) &&
           (!startDate || session.date >= startDate) &&
           (!endDate || session.date <= endDate) &&
           selectedWeekdays.includes(weekday) &&
           (lessonType === 'all' || session.title === lessonType)
         );
       }),
-    [endDate, lessonType, selectedWeekdays, sessions, startDate],
+    [endDate, lessonType, recurringSessions, selectedWeekdays, startDate],
   );
   const updatableSessions = matchingSessions.filter((session) => {
     const existing = availabilityBySessionForTarget.get(session.id);
@@ -100,29 +105,21 @@ export function BulkAvailabilityPanel({
     return overwriteExisting || !hasExplicitExisting;
   });
   const skippedCount = matchingSessions.length - updatableSessions.length;
+  const dateRangeError = getDateRangeError(
+    startDate,
+    endDate,
+    dateBounds.firstDate,
+    dateBounds.lastDate,
+  );
   const selectedWeekdayLabels = weekdays
     .filter((weekday) => selectedWeekdays.includes(weekday.value))
     .map((weekday) => weekday.label.toLowerCase())
     .join(', ');
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function applyBulkUpdate() {
     setError(undefined);
     setResultMessage(undefined);
-
-    if (!updatableSessions.length) {
-      setError('Aucun cours ne correspond aux critères sélectionnés.');
-      return;
-    }
-
-    if (
-      overwriteExisting &&
-      !window.confirm(
-        'Des disponibilités déjà renseignées seront remplacées. Continuer ?',
-      )
-    ) {
-      return;
-    }
+    setShowOverwriteConfirmation(false);
 
     const result = await onBulkUpdateAvailability({
       targetTeacherId: effectiveTargetTeacherId,
@@ -135,6 +132,36 @@ export function BulkAvailabilityPanel({
     if (result) {
       setResultMessage(`${result.updatedCount} disponibilités ont été mises à jour.`);
     }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(undefined);
+    setResultMessage(undefined);
+
+    if (dateRangeError) {
+      setError(dateRangeError);
+      return;
+    }
+
+    if (!matchingSessions.length) {
+      setError('Aucun cours régulier ne correspond aux dates, jours et type sélectionnés.');
+      return;
+    }
+
+    if (!updatableSessions.length) {
+      setError(
+        'Toutes ces disponibilités sont déjà renseignées. Cochez le remplacement pour les modifier.',
+      );
+      return;
+    }
+
+    if (overwriteExisting) {
+      setShowOverwriteConfirmation(true);
+      return;
+    }
+
+    void applyBulkUpdate();
   }
 
   return (
@@ -159,11 +186,31 @@ export function BulkAvailabilityPanel({
         <div className="form-grid">
           <label className="field">
             <span>Du</span>
-            <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            <input
+              type="date"
+              value={startDate}
+              min={dateBounds.firstDate}
+              max={dateBounds.lastDate}
+              required
+              onChange={(event) => {
+                setStartDate(event.target.value);
+                setShowOverwriteConfirmation(false);
+              }}
+            />
           </label>
           <label className="field">
             <span>Au</span>
-            <input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+            <input
+              type="date"
+              value={endDate}
+              min={dateBounds.firstDate}
+              max={dateBounds.lastDate}
+              required
+              onChange={(event) => {
+                setEndDate(event.target.value);
+                setShowOverwriteConfirmation(false);
+              }}
+            />
           </label>
           <label className="field">
             <span>Type de cours</span>
@@ -177,6 +224,28 @@ export function BulkAvailabilityPanel({
             </select>
           </label>
         </div>
+
+        {dateBounds.firstDate && dateBounds.lastDate ? (
+          <div className="bulk-period-context">
+            <small>
+              Cours réguliers disponibles du {formatLongDate(dateBounds.firstDate)} au{' '}
+              {formatLongDate(dateBounds.lastDate)}.
+            </small>
+            <button
+              className="text-button"
+              type="button"
+              onClick={() => {
+                setStartDate(defaultStartDate);
+                setEndDate(defaultEndDate);
+                setError(undefined);
+                setResultMessage(undefined);
+                setShowOverwriteConfirmation(false);
+              }}
+            >
+              Réinitialiser la période
+            </button>
+          </div>
+        ) : null}
 
         <fieldset className="weekday-options">
           <legend>Jours</legend>
@@ -218,30 +287,102 @@ export function BulkAvailabilityPanel({
           <input
             type="checkbox"
             checked={overwriteExisting}
-            onChange={(event) => setOverwriteExisting(event.target.checked)}
+            onChange={(event) => {
+              setOverwriteExisting(event.target.checked);
+              setShowOverwriteConfirmation(false);
+            }}
           />
           <span>Remplacer également les disponibilités déjà renseignées</span>
         </label>
 
         <div className="muted-box">
-          <p>
-            {updatableSessions.length} cours seront mis à jour pour {targetTeacher.name}.
-          </p>
+          {matchingSessions.length > 0 ? (
+            <>
+              <p>
+                <strong>{matchingSessions.length} cours réguliers trouvés.</strong>
+              </p>
+              <p>
+                {updatableSessions.length} disponibilités seront mises à jour pour {targetTeacher.name}.
+              </p>
+            </>
+          ) : (
+            <p>
+              <strong>Aucun cours régulier trouvé pour cette sélection.</strong>
+            </p>
+          )}
           <small>
             {startDate ? formatLongDate(startDate) : 'Date de début non renseignée'} →{' '}
             {endDate ? formatLongDate(endDate) : 'date de fin non renseignée'} · {selectedWeekdayLabels || 'aucun jour'} ·{' '}
             {lessonType === 'all' ? 'tous les cours' : lessonType}
-            {skippedCount > 0 ? ` · ${skippedCount} déjà renseignés ignorés` : ''}
+            {skippedCount > 0
+              ? ` · ${skippedCount} ${
+                  skippedCount === 1
+                    ? 'disponibilité déjà renseignée ignorée'
+                    : 'disponibilités déjà renseignées ignorées'
+                }`
+              : ''}
           </small>
+          {dateRangeError ? <small className="bulk-selection-warning">{dateRangeError}</small> : null}
         </div>
 
         {error ? <p className="form-error">{error}</p> : null}
         {resultMessage ? <p className="success-banner">{resultMessage}</p> : null}
 
-        <button className="primary-button" type="submit" disabled={isSaving || !updatableSessions.length}>
-          {isSaving ? 'Application...' : 'Appliquer aux cours sélectionnés'}
-        </button>
+        {showOverwriteConfirmation ? (
+          <div className="bulk-confirmation" role="alert">
+            <strong>Confirmer le remplacement</strong>
+            <p>
+              Les disponibilités déjà renseignées de {targetTeacher.name} seront remplacées sur les cours sélectionnés.
+            </p>
+            <div className="admin-actions">
+              <button
+                className="danger-button"
+                type="button"
+                disabled={isSaving}
+                onClick={() => void applyBulkUpdate()}
+              >
+                {isSaving ? 'Application...' : 'Confirmer la modification'}
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={isSaving}
+                onClick={() => setShowOverwriteConfirmation(false)}
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            className="primary-button"
+            type="submit"
+            disabled={isSaving || Boolean(dateRangeError) || !updatableSessions.length}
+          >
+            {isSaving ? 'Application...' : 'Appliquer aux cours sélectionnés'}
+          </button>
+        )}
       </form>
     </details>
   );
+}
+
+function getDateRangeError(startDate: string, endDate: string, firstDate: string, lastDate: string) {
+  if (!firstDate || !lastDate) {
+    return "Aucun cours régulier n'est disponible pour la modification en série.";
+  }
+
+  if (!startDate || !endDate) {
+    return 'Renseignez une date de début et une date de fin.';
+  }
+
+  if (startDate > endDate) {
+    return 'La date de fin doit être postérieure ou égale à la date de début.';
+  }
+
+  if (startDate < firstDate || startDate > lastDate || endDate < firstDate || endDate > lastDate) {
+    return `Choisissez une période comprise entre ${formatLongDate(firstDate)} et ${formatLongDate(lastDate)}.`;
+  }
+
+  return undefined;
 }

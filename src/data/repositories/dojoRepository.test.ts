@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { CreateSessionInput, Session } from '../../types';
 import {
   bulkUpdateAvailability,
+  createForumMessage,
   createTeacher,
   createSession,
   deleteSession,
   deleteTeacher,
   getDojoDataSnapshot,
+  getForumMessages,
   getNotificationReadAt,
   getRecentChanges,
   markNotificationsRead,
@@ -421,6 +423,48 @@ describe('dojoRepository notification read state', () => {
     const olderTimestamp = '2020-01-01T00:00:00.000Z';
     await markNotificationsRead(teacherId, olderTimestamp);
     expect(await getNotificationReadAt(teacherId)).toBe(latestChange.createdAt);
+  });
+});
+
+describe('dojoRepository forum messages', () => {
+  it('allows teachers, admins, and the super admin to post persistent messages', async () => {
+    await createForumMessage('Message de Christian.', teacherId);
+    await createForumMessage('Message de Marc.', adminId);
+    await createForumMessage('Message de Samy.', superAdminId);
+
+    const messages = await getForumMessages();
+
+    expect(messages).toHaveLength(3);
+    expect(messages.map((message) => message.authorName)).toEqual([
+      'Christian Martinez',
+      'Marc Piperno',
+      'Samy Belkacemi',
+    ]);
+    expect(messages[0]).toMatchObject({
+      teacherId,
+      message: 'Message de Christian.',
+    });
+    expect(new Date(messages[0].createdAt).toString()).not.toBe('Invalid Date');
+  });
+
+  it('does not mutate previously returned message snapshots', async () => {
+    const previousMessages = await getForumMessages();
+    await createForumMessage('Information importante.', teacherId);
+    const currentMessages = await getForumMessages();
+
+    expect(previousMessages).toHaveLength(0);
+    expect(currentMessages).toHaveLength(1);
+
+    currentMessages[0].message = 'Texte modifié uniquement dans le test.';
+    expect((await getForumMessages())[0].message).toBe('Information importante.');
+  });
+
+  it('rejects empty and oversized messages', async () => {
+    await expect(createForumMessage('   ', teacherId)).rejects.toThrow('between 1 and 2000');
+    await expect(createForumMessage('a'.repeat(2001), teacherId)).rejects.toThrow(
+      'between 1 and 2000',
+    );
+    expect(await getForumMessages()).toHaveLength(0);
   });
 });
 

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { recurringLessonTemplates } from '../data/recurringSchedule';
 import { activeDojoSeason } from '../data/seasonConfig';
-import { isRecurringLessonSession, recurringLessonTitles } from './recurringLessons';
+import {
+  getRecurringLessonDateBounds,
+  isRecurringLessonSession,
+  recurringLessonTitles,
+} from './recurringLessons';
 import { generateRecurringSessions, generateSeasonSessions } from './sessionGeneration';
 
 describe('recurring lesson schedule', () => {
@@ -178,5 +182,26 @@ describe('generateRecurringSessions', () => {
         endTime: '12:00',
       }),
     ).toBe(false);
+  });
+
+  it('derives bulk-editing dates only from regular lessons', () => {
+    const regularSessions = generateSeasonSessions(activeDojoSeason);
+    const exceptionalSession = {
+      ...regularSessions[0],
+      id: 'exceptional-2027-09',
+      title: 'Stage exceptionnel',
+      date: '2027-09-19',
+      startTime: '10:00',
+      endTime: '12:00',
+    };
+
+    expect(
+      getRecurringLessonDateBounds([...regularSessions, exceptionalSession], '2026-07-30'),
+    ).toEqual({
+      firstDate: '2026-09-07',
+      lastDate: '2027-07-01',
+      defaultStartDate: '2026-09-07',
+      defaultEndDate: '2027-07-01',
+    });
   });
 });

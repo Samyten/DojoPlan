@@ -60,6 +60,15 @@ export function getFriendlyErrorMessage(error: unknown, fallback: string) {
   }
 
   if (
+    normalizedMessage.includes('forum_messages') ||
+    (normalizedMessage.includes('42p01') && normalizedMessage.includes('forum'))
+  ) {
+    return import.meta.env.DEV
+      ? 'Le Forum est absent de Supabase. Exécutez supabase/migrations/add_forum_messages.sql.'
+      : "Le Forum n'est pas encore disponible. Contactez l'administrateur.";
+  }
+
+  if (
     normalizedMessage.includes('no linked teacher profile') ||
     normalizedMessage.includes('aucun profil professeur') ||
     normalizedMessage.includes('no rows')

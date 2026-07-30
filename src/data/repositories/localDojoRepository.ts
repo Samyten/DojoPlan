@@ -8,6 +8,7 @@ import type {
   CreateSessionInput,
   CreateTeacherInput,
   DojoDataState,
+  ForumMessage,
   Session,
   Teacher,
   UpdateSessionInput,
@@ -17,6 +18,7 @@ import { assertValidSessionInput } from '../../utils/sessionValidation';
 
 const STORAGE_KEY = 'dojo-planning.mock-state.v8';
 const NOTIFICATION_READ_STORAGE_KEY = 'dojo-planning.notification-read.v1';
+const FORUM_MESSAGES_STORAGE_KEY = 'dojo-planning.forum-messages.v1';
 
 function cloneState(state: DojoDataState): DojoDataState {
   return structuredClone(state);
@@ -72,6 +74,29 @@ function loadNotificationReadState(): Record<string, string> {
 function saveNotificationReadState(state: Record<string, string>) {
   if (canUseLocalStorage()) {
     window.localStorage.setItem(NOTIFICATION_READ_STORAGE_KEY, JSON.stringify(state));
+  }
+}
+
+function loadForumMessages(): ForumMessage[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  try {
+    const messages = JSON.parse(
+      window.localStorage.getItem(FORUM_MESSAGES_STORAGE_KEY) ?? '[]',
+    ) as ForumMessage[];
+    return structuredClone(messages).sort((left, right) =>
+      left.createdAt.localeCompare(right.createdAt),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveForumMessages(messages: ForumMessage[]) {
+  if (canUseLocalStorage()) {
+    window.localStorage.setItem(FORUM_MESSAGES_STORAGE_KEY, JSON.stringify(messages));
   }
 }
 
@@ -251,6 +276,10 @@ export async function getRecentChanges(): Promise<ChangeLogEntry[]> {
   return toSnapshot(loadState()).changes;
 }
 
+export async function getForumMessages(): Promise<ForumMessage[]> {
+  return loadForumMessages();
+}
+
 export async function getNotificationReadAt(teacherId: string): Promise<string | undefined> {
   return loadNotificationReadState()[teacherId];
 }
@@ -278,6 +307,35 @@ export async function markNotificationsRead(
 
 export async function getDojoData(): Promise<DojoDataState> {
   return getDojoDataSnapshot();
+}
+
+export async function createForumMessage(
+  message: string,
+  actorTeacherId: string,
+): Promise<ForumMessage> {
+  const actor = findTeacher(loadState(), actorTeacherId);
+  const normalizedMessage = message.trim();
+
+  if (!actor) {
+    throw new Error('Cannot post a forum message for an unknown teacher.');
+  }
+
+  if (!normalizedMessage || normalizedMessage.length > 2000) {
+    throw new Error('Forum messages must contain between 1 and 2000 characters.');
+  }
+
+  const forumMessage: ForumMessage = {
+    id: createId('forum'),
+    teacherId: actor.id,
+    authorName: actor.name,
+    message: normalizedMessage,
+    createdAt: new Date().toISOString(),
+  };
+  const messages = loadForumMessages();
+  messages.push(forumMessage);
+  saveForumMessages(messages);
+
+  return structuredClone(forumMessage);
 }
 
 export function getDojoDataSnapshot(): DojoDataState {
@@ -707,6 +765,7 @@ export async function resetMockData(): Promise<DojoDataState> {
   saveState(state);
   if (canUseLocalStorage()) {
     window.localStorage.removeItem(NOTIFICATION_READ_STORAGE_KEY);
+    window.localStorage.removeItem(FORUM_MESSAGES_STORAGE_KEY);
   }
   return toSnapshot(state);
 }

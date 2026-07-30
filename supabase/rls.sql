@@ -53,6 +53,7 @@ alter table public.sessions enable row level security;
 alter table public.availability enable row level security;
 alter table public.change_log_entries enable row level security;
 alter table public.notification_read_state enable row level security;
+alter table public.forum_messages enable row level security;
 
 drop policy if exists "authenticated teachers can read teachers" on public.teachers;
 create policy "authenticated teachers can read teachers"
@@ -208,3 +209,29 @@ with check (teacher_id = public.current_teacher_id());
 
 revoke all on table public.notification_read_state from anon;
 grant select, insert, update on table public.notification_read_state to authenticated;
+
+-- Forum: every linked teacher can read and post. The author is tied to auth.uid() through
+-- current_teacher_id(), so clients cannot publish under another teacher's identity.
+drop policy if exists "authenticated teachers can read forum messages" on public.forum_messages;
+create policy "authenticated teachers can read forum messages"
+on public.forum_messages
+for select
+to authenticated
+using (public.current_teacher_id() is not null);
+
+drop policy if exists "teachers can post forum messages as themselves" on public.forum_messages;
+create policy "teachers can post forum messages as themselves"
+on public.forum_messages
+for insert
+to authenticated
+with check (
+  teacher_id = public.current_teacher_id()
+  and author_name = (
+    select teacher.name
+    from public.teachers as teacher
+    where teacher.id = public.current_teacher_id()
+  )
+);
+
+revoke all on table public.forum_messages from anon, authenticated;
+grant select, insert on table public.forum_messages to authenticated;

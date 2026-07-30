@@ -7,6 +7,7 @@ import type {
   CreateSessionInput,
   CreateTeacherInput,
   DojoDataState,
+  ForumMessage,
   Session,
   Teacher,
   TeacherRole,
@@ -62,6 +63,14 @@ type ChangeLogEntryRow = {
 type NotificationReadStateRow = {
   teacher_id: string;
   last_read_at: string;
+};
+
+type ForumMessageRow = {
+  id: string;
+  teacher_id: string | null;
+  author_name: string;
+  message: string;
+  created_at: string;
 };
 
 type BulkAvailabilityResultRow = {
@@ -143,6 +152,20 @@ export async function getRecentChanges(): Promise<ChangeLogEntry[]> {
   }
 
   return (data as ChangeLogEntryRow[]).map(mapChangeLogEntryRow);
+}
+
+export async function getForumMessages(): Promise<ForumMessage[]> {
+  const { data, error } = await getSupabaseClient()
+    .from('forum_messages')
+    .select('id,teacher_id,author_name,message,created_at')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as ForumMessageRow[]).map(mapForumMessageRow).reverse();
 }
 
 export async function getNotificationReadAt(teacherId: string): Promise<string | undefined> {
@@ -532,6 +555,36 @@ export async function updateLessonPlan(
   return mapSessionRow(data as SessionRow);
 }
 
+export async function createForumMessage(
+  message: string,
+  actorTeacherId: string,
+): Promise<ForumMessage> {
+  const normalizedMessage = message.trim();
+
+  if (!normalizedMessage || normalizedMessage.length > 2000) {
+    throw new Error('Forum messages must contain between 1 and 2000 characters.');
+  }
+
+  const actor = await getCurrentTeacherOrThrow();
+  const { data, error } = await getSupabaseClient()
+    .from('forum_messages')
+    .insert({
+      teacher_id: actor.id,
+      author_name: actor.name,
+      message: normalizedMessage,
+    })
+    .select('id,teacher_id,author_name,message,created_at')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  // Supabase Auth and RLS determine the trusted author; the client id is never trusted.
+  void actorTeacherId;
+  return mapForumMessageRow(data as ForumMessageRow);
+}
+
 export async function resetMockData(): Promise<DojoDataState> {
   throw new Error(
     "La réinitialisation des données de test n'est disponible qu'en mode local. Utilisez supabase/seed.sql pour réinitialiser Supabase.",
@@ -712,6 +765,16 @@ function mapChangeLogEntryRow(row: ChangeLogEntryRow): ChangeLogEntry {
     description: row.description,
     createdAt: row.created_at,
     metadata: row.metadata ?? undefined,
+  };
+}
+
+function mapForumMessageRow(row: ForumMessageRow): ForumMessage {
+  return {
+    id: row.id,
+    teacherId: row.teacher_id ?? undefined,
+    authorName: row.author_name,
+    message: row.message,
+    createdAt: row.created_at,
   };
 }
 

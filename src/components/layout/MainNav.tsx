@@ -1,4 +1,4 @@
-export type AppView = 'sessions' | 'changes' | 'teachers';
+export type AppView = 'sessions' | 'changes' | 'teachers' | 'forum';
 
 interface MainNavProps {
   activeView: AppView;
@@ -9,6 +9,7 @@ interface MainNavProps {
 const navItems: Array<{ view: AppView; label: string }> = [
   { view: 'sessions', label: 'Calendrier / Cours' },
   { view: 'changes', label: 'Modifications récentes' },
+  { view: 'forum', label: 'Forum' },
   { view: 'teachers', label: 'Professeurs' },
 ];
 
