@@ -26,7 +26,7 @@ export const mockTeachers: Teacher[] = [
   {
     id: 'teacher-hugo-amador',
     name: 'Hugo Amador',
-    email: 'hugo.amador@dojo.local',
+    email: 'amadorhugo31@gmail.com',
     role: 'teacher',
     displayOrder: 4,
   },
@@ -47,7 +47,7 @@ export const mockTeachers: Teacher[] = [
   {
     id: 'teacher-lohan-amador',
     name: 'Lohan Amador',
-    email: 'lohan.amador@dojo.local',
+    email: 'lohanamador66@gmail.com',
     role: 'teacher',
     displayOrder: 7,
   },

@@ -154,6 +154,7 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 3. `supabase/migrations/add_bulk_availability_rpc.sql`
 4. `supabase/migrations/restrict_bulk_availability_to_regular_lessons.sql`
 5. `supabase/migrations/add_notification_read_state.sql`
+6. `supabase/migrations/link_hugo_lohan_auth_accounts.sql` (après avoir créé leurs comptes dans Supabase Authentication)
 
 Ensuite :
 
@@ -261,6 +262,7 @@ npm run test:watch
 - `supabase/migrations/add_karate_contact_sessions_2026_2027.sql` : ajoute les cours Karaté Contact manquants en production sans toucher aux autres cours.
 - `supabase/migrations/add_bulk_availability_rpc.sql` : ajoute la RPC de disponibilités en série et admin pour production existante.
 - `supabase/migrations/add_notification_read_state.sql` : ajoute le suivi privé lu/non lu des modifications récentes.
+- `supabase/migrations/link_hugo_lohan_auth_accounts.sql` : met à jour et lie les profils Auth de Hugo et Lohan sans stocker leurs mots de passe.
 - `supabase/verify.sql` : requêtes read-only pour vérifier le setup Supabase.
 - `docs/supabase-live-test-plan.md` : scénario manuel pour tester admin/professeur.
 
