@@ -29,6 +29,10 @@ type NotificationState =
 
 const DISMISSED_AT_KEY = 'dojo-planning.notification-prompt-dismissed-at.v1';
 const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000;
+// A VAPID public key is intentionally safe to ship in the client bundle. The environment
+// variable remains the override so the key can still be rotated without changing this component.
+const BUNDLED_WEB_PUSH_PUBLIC_KEY =
+  'BGDO7MkK1lr08zdSeox8nbtdFw-3ouFRnzU1z4siBV8f-7inNrm91gg5E2PYlGJK2GfxRiTgoZSme6F2n9DGq3E';
 
 function wasRecentlyDismissed() {
   const dismissedAt = Number(window.localStorage.getItem(DISMISSED_AT_KEY));
@@ -36,7 +40,8 @@ function wasRecentlyDismissed() {
 }
 
 export function NotificationPrompt({ currentTeacher, isSupabaseMode }: NotificationPromptProps) {
-  const publicKey = import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY?.trim();
+  const publicKey =
+    import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY?.trim() || BUNDLED_WEB_PUSH_PUBLIC_KEY;
   const [installed, setInstalled] = useState(isInstalledApp);
   const [state, setState] = useState<NotificationState>('checking');
   const [error, setError] = useState<string>();
