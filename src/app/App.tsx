@@ -167,25 +167,41 @@ export function App() {
     }
 
     let cancelled = false;
-    void Promise.all([getForumMessages(), getForumReadAt(currentTeacher.id)])
-      .then(([messages, readAt]) => {
-        if (!cancelled) {
-          setVisibleUnreadForumMessageIds(new Set());
-          setForumMessages(messages);
-          setForumReadAt(readAt);
-          setForumReadTeacherId(currentTeacher.id);
+    void Promise.allSettled([getForumMessages(), getForumReadAt(currentTeacher.id)]).then(
+      ([messagesResult, readStateResult]) => {
+        if (cancelled) {
+          return;
         }
-      })
-      .catch((loadError: unknown) => {
-        if (!cancelled) {
+
+        setForumError(undefined);
+
+        if (messagesResult.status === 'rejected') {
           setForumError(
             getFriendlyErrorMessage(
-              loadError,
-              "Les notifications du Forum n'ont pas pu être chargées.",
+              messagesResult.reason,
+              "Les messages du Forum n'ont pas pu être chargés.",
+            ),
+          );
+          return;
+        }
+
+        setVisibleUnreadForumMessageIds(new Set());
+        setForumMessages(messagesResult.value);
+        setForumReadTeacherId(currentTeacher.id);
+
+        if (readStateResult.status === 'fulfilled') {
+          setForumReadAt(readStateResult.value);
+        } else {
+          setForumReadAt(undefined);
+          setForumError(
+            getFriendlyErrorMessage(
+              readStateResult.reason,
+              "Les messages sont chargés, mais leur statut lu ou non lu n'a pas pu être récupéré.",
             ),
           );
         }
-      });
+      },
+    );
 
     return () => {
       cancelled = true;
@@ -203,18 +219,34 @@ export function App() {
     setForumError(undefined);
 
     try {
-      const [messages, readAt] = await Promise.all([
+      const [messagesResult, readStateResult] = await Promise.allSettled([
         getForumMessages(),
         currentTeacher ? getForumReadAt(currentTeacher.id) : Promise.resolve(undefined),
       ]);
+      if (messagesResult.status === 'rejected') {
+        throw messagesResult.reason;
+      }
+
+      const messages = messagesResult.value;
+      const canTrackReadState = readStateResult.status === 'fulfilled';
+      const readAt = canTrackReadState ? readStateResult.value : undefined;
       setForumMessages(messages);
 
       if (currentTeacher) {
         setForumReadAt(readAt);
         setForumReadTeacherId(currentTeacher.id);
+
+        if (!canTrackReadState) {
+          setForumError(
+            getFriendlyErrorMessage(
+              readStateResult.reason,
+              "Les messages sont chargés, mais leur statut lu ou non lu n'a pas pu être récupéré.",
+            ),
+          );
+        }
       }
 
-      if (markVisibleMessagesAsRead && currentTeacher) {
+      if (markVisibleMessagesAsRead && currentTeacher && canTrackReadState) {
         const unreadMessages = messages.filter(
           (message) => !readAt || message.createdAt > readAt,
         );
