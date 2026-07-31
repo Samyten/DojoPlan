@@ -6,6 +6,7 @@ import {
   createTeacher,
   createSession,
   deleteSession,
+  deletePushSubscription,
   deleteTeacher,
   getDojoDataSnapshot,
   getForumMessages,
@@ -16,6 +17,7 @@ import {
   markForumRead,
   reorderTeachers,
   resetMockData,
+  savePushSubscription,
   updateAvailability,
   updateLessonPlan,
   updateSession,
@@ -482,6 +484,40 @@ describe('dojoRepository forum messages', () => {
 
     await markForumRead(teacherId, '2020-01-01T00:00:00.000Z');
     expect(await getForumReadAt(teacherId)).toBe(message.createdAt);
+  });
+});
+
+describe('dojoRepository push subscriptions', () => {
+  it('stores and removes a device subscription for a known teacher in local mode', async () => {
+    const subscription = {
+      endpoint: 'https://push.example.test/subscription-1',
+      p256dh: 'public-encryption-key',
+      auth: 'authentication-secret',
+    };
+
+    await savePushSubscription(subscription, teacherId);
+
+    expect(
+      JSON.parse(window.localStorage.getItem('dojo-planning.push-subscriptions.v1') ?? '[]'),
+    ).toEqual([{ ...subscription, teacherId }]);
+
+    await deletePushSubscription(subscription.endpoint, teacherId);
+    expect(
+      JSON.parse(window.localStorage.getItem('dojo-planning.push-subscriptions.v1') ?? '[]'),
+    ).toEqual([]);
+  });
+
+  it('rejects subscriptions for an unknown teacher', async () => {
+    await expect(
+      savePushSubscription(
+        {
+          endpoint: 'https://push.example.test/unknown',
+          p256dh: 'public-encryption-key',
+          auth: 'authentication-secret',
+        },
+        'teacher-inconnu',
+      ),
+    ).rejects.toThrow('unknown teacher');
   });
 });
 

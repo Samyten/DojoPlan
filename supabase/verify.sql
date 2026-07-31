@@ -56,7 +56,8 @@ where schemaname = 'public'
     'change_log_entries',
     'notification_read_state',
     'forum_messages',
-    'forum_read_state'
+    'forum_read_state',
+    'push_subscriptions'
   )
 order by tablename;
 
@@ -71,7 +72,8 @@ where schemaname = 'public'
     'change_log_entries',
     'notification_read_state',
     'forum_messages',
-    'forum_read_state'
+    'forum_read_state',
+    'push_subscriptions'
   )
 order by tablename, policyname;
 
@@ -106,6 +108,16 @@ select count(*) as change_log_count from public.change_log_entries;
 select count(*) as notification_read_state_count from public.notification_read_state;
 select count(*) as forum_message_count from public.forum_messages;
 select count(*) as forum_read_state_count from public.forum_read_state;
+select count(*) as push_subscription_count from public.push_subscriptions;
+
+-- Subscription coverage by teacher. Endpoints and encryption keys are intentionally omitted.
+select
+  teacher.name,
+  count(subscription.id) as subscribed_device_count
+from public.teachers as teacher
+left join public.push_subscriptions as subscription on subscription.teacher_id = teacher.id
+group by teacher.id, teacher.name
+order by teacher.name;
 
 -- Most recent Forum messages and their stored author names.
 select id, teacher_id, author_name, message, created_at

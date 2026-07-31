@@ -9,6 +9,7 @@ import { SessionDetails } from '../components/sessions/SessionDetails';
 import { TeachersPage } from '../components/teachers/TeachersPage';
 import { ForumPage } from '../components/forum/ForumPage';
 import { InstallAppPrompt } from '../components/pwa/InstallAppPrompt';
+import { NotificationPrompt } from '../components/pwa/NotificationPrompt';
 import { LoginScreen } from '../auth/LoginScreen';
 import { useAuth } from '../auth/useAuth';
 import {
@@ -45,6 +46,25 @@ import { parseLocalDate, startOfMonth } from '../utils/dates';
 import { getFriendlyErrorMessage } from '../utils/errors';
 import { canManageSessions } from '../utils/roles';
 
+const appViews: AppView[] = ['sessions', 'changes', 'teachers', 'forum'];
+
+function getInitialAppView(): AppView {
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  return appViews.includes(requestedView as AppView) ? (requestedView as AppView) : 'sessions';
+}
+
+function updateViewUrl(view: AppView) {
+  const url = new URL(window.location.href);
+
+  if (view === 'sessions') {
+    url.searchParams.delete('view');
+  } else {
+    url.searchParams.set('view', view);
+  }
+
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 export function App() {
   const {
     currentTeacher,
@@ -57,7 +77,7 @@ export function App() {
   } = useAuth();
   const [initialData] = useState<DojoDataState>(() => getDojoDataSnapshot());
   const [data, setData] = useState<DojoDataState>(initialData);
-  const [activeView, setActiveView] = useState<AppView>('sessions');
+  const [activeView, setActiveView] = useState<AppView>(getInitialAppView);
   const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>();
   const [selectedDate, setSelectedDate] = useState<string | undefined>();
   const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
@@ -252,6 +272,7 @@ export function App() {
 
   function handleChangeView(view: AppView) {
     setActiveView(view);
+    updateViewUrl(view);
 
     if (view !== 'changes') {
       setVisibleUnreadChangeIds(new Set());
@@ -729,6 +750,7 @@ export function App() {
 
       <footer className="app-footer">
         <InstallAppPrompt />
+        <NotificationPrompt currentTeacher={currentTeacher} isSupabaseMode={isSupabaseMode} />
         <SupabaseDiagnostics
           authError={authError}
           authUser={authUser}

@@ -9,6 +9,7 @@ import type {
   CreateTeacherInput,
   DojoDataState,
   ForumMessage,
+  PushSubscriptionInput,
   Session,
   Teacher,
   UpdateSessionInput,
@@ -20,6 +21,11 @@ const STORAGE_KEY = 'dojo-planning.mock-state.v8';
 const NOTIFICATION_READ_STORAGE_KEY = 'dojo-planning.notification-read.v1';
 const FORUM_MESSAGES_STORAGE_KEY = 'dojo-planning.forum-messages.v1';
 const FORUM_READ_STORAGE_KEY = 'dojo-planning.forum-read.v1';
+const PUSH_SUBSCRIPTIONS_STORAGE_KEY = 'dojo-planning.push-subscriptions.v1';
+
+type LocalPushSubscription = PushSubscriptionInput & {
+  teacherId: string;
+};
 
 function cloneState(state: DojoDataState): DojoDataState {
   return structuredClone(state);
@@ -119,6 +125,26 @@ function loadForumReadState(): Record<string, string> {
 function saveForumReadState(state: Record<string, string>) {
   if (canUseLocalStorage()) {
     window.localStorage.setItem(FORUM_READ_STORAGE_KEY, JSON.stringify(state));
+  }
+}
+
+function loadPushSubscriptions(): LocalPushSubscription[] {
+  if (!canUseLocalStorage()) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(
+      window.localStorage.getItem(PUSH_SUBSCRIPTIONS_STORAGE_KEY) ?? '[]',
+    ) as LocalPushSubscription[];
+  } catch {
+    return [];
+  }
+}
+
+function savePushSubscriptions(subscriptions: LocalPushSubscription[]) {
+  if (canUseLocalStorage()) {
+    window.localStorage.setItem(PUSH_SUBSCRIPTIONS_STORAGE_KEY, JSON.stringify(subscriptions));
   }
 }
 
@@ -380,6 +406,40 @@ export async function createForumMessage(
   saveForumMessages(messages);
 
   return structuredClone(forumMessage);
+}
+
+export async function savePushSubscription(
+  subscription: PushSubscriptionInput,
+  actorTeacherId: string,
+): Promise<void> {
+  if (!findTeacher(loadState(), actorTeacherId)) {
+    throw new Error('Cannot save a push subscription for an unknown teacher.');
+  }
+
+  if (!subscription.endpoint || !subscription.p256dh || !subscription.auth) {
+    throw new Error('A complete push subscription is required.');
+  }
+
+  const subscriptions = loadPushSubscriptions().filter(
+    (item) => item.endpoint !== subscription.endpoint,
+  );
+  subscriptions.push({ ...structuredClone(subscription), teacherId: actorTeacherId });
+  savePushSubscriptions(subscriptions);
+}
+
+export async function deletePushSubscription(
+  endpoint: string,
+  actorTeacherId: string,
+): Promise<void> {
+  if (!findTeacher(loadState(), actorTeacherId)) {
+    throw new Error('Cannot delete a push subscription for an unknown teacher.');
+  }
+
+  savePushSubscriptions(
+    loadPushSubscriptions().filter(
+      (item) => item.endpoint !== endpoint || item.teacherId !== actorTeacherId,
+    ),
+  );
 }
 
 export function getDojoDataSnapshot(): DojoDataState {
@@ -811,6 +871,7 @@ export async function resetMockData(): Promise<DojoDataState> {
     window.localStorage.removeItem(NOTIFICATION_READ_STORAGE_KEY);
     window.localStorage.removeItem(FORUM_MESSAGES_STORAGE_KEY);
     window.localStorage.removeItem(FORUM_READ_STORAGE_KEY);
+    window.localStorage.removeItem(PUSH_SUBSCRIPTIONS_STORAGE_KEY);
   }
   return toSnapshot(state);
 }

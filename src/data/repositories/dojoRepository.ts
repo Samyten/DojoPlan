@@ -76,5 +76,11 @@ export const updateLessonPlan: DojoRepository['updateLessonPlan'] = (...args) =>
 export const createForumMessage: DojoRepository['createForumMessage'] = (...args) =>
   getRepository().createForumMessage(...args);
 
+export const savePushSubscription: DojoRepository['savePushSubscription'] = (...args) =>
+  getRepository().savePushSubscription(...args);
+
+export const deletePushSubscription: DojoRepository['deletePushSubscription'] = (...args) =>
+  getRepository().deletePushSubscription(...args);
+
 export const resetMockData: DojoRepository['resetMockData'] = (...args) =>
   getRepository().resetMockData(...args);

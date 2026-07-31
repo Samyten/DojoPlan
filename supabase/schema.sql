@@ -77,6 +77,18 @@ create table if not exists forum_read_state (
   updated_at timestamptz not null default now()
 );
 
+-- One row per browser/device subscription. The endpoint and encryption keys are private
+-- delivery data: clients may only access subscriptions that belong to their own profile.
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid not null references teachers(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists sessions_date_idx on sessions(date);
 create index if not exists availability_session_id_idx on availability(session_id);
 create index if not exists availability_teacher_id_idx on availability(teacher_id);
@@ -84,6 +96,8 @@ create index if not exists change_log_entries_created_at_desc_idx
   on change_log_entries(created_at desc);
 create index if not exists forum_messages_created_at_desc_idx
   on forum_messages(created_at desc);
+create index if not exists push_subscriptions_teacher_id_idx
+  on push_subscriptions(teacher_id);
 
 create or replace function set_updated_at()
 returns trigger

@@ -97,6 +97,12 @@ export interface ForumMessage {
   createdAt: string;
 }
 
+export interface PushSubscriptionInput {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
 export interface DojoDataState {
   teachers: Teacher[];
   sessions: Session[];

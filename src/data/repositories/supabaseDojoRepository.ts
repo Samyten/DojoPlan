@@ -8,6 +8,7 @@ import type {
   CreateTeacherInput,
   DojoDataState,
   ForumMessage,
+  PushSubscriptionInput,
   Session,
   Teacher,
   TeacherRole,
@@ -621,6 +622,57 @@ export async function createForumMessage(
   // Supabase Auth and RLS determine the trusted author; the client id is never trusted.
   void actorTeacherId;
   return mapForumMessageRow(data as ForumMessageRow);
+}
+
+export async function savePushSubscription(
+  subscription: PushSubscriptionInput,
+  actorTeacherId: string,
+): Promise<void> {
+  const actor = await getCurrentTeacherOrThrow();
+
+  if (actor.id !== actorTeacherId) {
+    throw new Error('The push subscription must belong to the authenticated teacher.');
+  }
+
+  if (!subscription.endpoint || !subscription.p256dh || !subscription.auth) {
+    throw new Error('A complete push subscription is required.');
+  }
+
+  const { error } = await getSupabaseClient().from('push_subscriptions').upsert(
+    {
+      teacher_id: actor.id,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.p256dh,
+      auth: subscription.auth,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'endpoint' },
+  );
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function deletePushSubscription(
+  endpoint: string,
+  actorTeacherId: string,
+): Promise<void> {
+  const actor = await getCurrentTeacherOrThrow();
+
+  if (actor.id !== actorTeacherId) {
+    throw new Error('The push subscription must belong to the authenticated teacher.');
+  }
+
+  const { error } = await getSupabaseClient()
+    .from('push_subscriptions')
+    .delete()
+    .eq('teacher_id', actor.id)
+    .eq('endpoint', endpoint);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function resetMockData(): Promise<DojoDataState> {

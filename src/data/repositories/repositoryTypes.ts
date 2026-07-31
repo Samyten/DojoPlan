@@ -7,6 +7,7 @@ import type {
   CreateSessionInput,
   DojoDataState,
   ForumMessage,
+  PushSubscriptionInput,
   Session,
   Teacher,
   UpdateSessionInput,
@@ -50,5 +51,10 @@ export interface DojoRepository {
   bulkUpdateAvailability(input: BulkAvailabilityInput): Promise<BulkAvailabilityResult>;
   updateLessonPlan(sessionId: string, lessonPlan: string, actorTeacherId: string): Promise<Session>;
   createForumMessage(message: string, actorTeacherId: string): Promise<ForumMessage>;
+  savePushSubscription(
+    subscription: PushSubscriptionInput,
+    actorTeacherId: string,
+  ): Promise<void>;
+  deletePushSubscription(endpoint: string, actorTeacherId: string): Promise<void>;
   resetMockData(): Promise<DojoDataState>;
 }

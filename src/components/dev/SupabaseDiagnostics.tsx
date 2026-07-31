@@ -20,6 +20,7 @@ export function SupabaseDiagnostics({
 
   const hasSupabaseUrl = Boolean(import.meta.env.VITE_SUPABASE_URL);
   const hasAnonKey = Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const hasWebPushKey = Boolean(import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY);
 
   return (
     <details className="dev-tools supabase-diagnostics">
@@ -36,6 +37,10 @@ export function SupabaseDiagnostics({
         <div>
           <dt>Clé anon</dt>
           <dd>{hasAnonKey ? 'renseignée, masquée' : 'manquante'}</dd>
+        </div>
+        <div>
+          <dt>Clé Web Push publique</dt>
+          <dd>{hasWebPushKey ? 'renseignée' : 'manquante'}</dd>
         </div>
         <div>
           <dt>Utilisateur Auth</dt>

@@ -55,6 +55,7 @@ alter table public.change_log_entries enable row level security;
 alter table public.notification_read_state enable row level security;
 alter table public.forum_messages enable row level security;
 alter table public.forum_read_state enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 drop policy if exists "authenticated teachers can read teachers" on public.teachers;
 create policy "authenticated teachers can read teachers"
@@ -263,3 +264,37 @@ with check (teacher_id = public.current_teacher_id());
 
 revoke all on table public.forum_read_state from anon, authenticated;
 grant select, insert, update on table public.forum_read_state to authenticated;
+
+-- A Web Push endpoint is private device data. Teachers can register and remove only
+-- their own devices; the Edge Function uses its server-side service role to deliver.
+drop policy if exists "teachers can read own push subscriptions" on public.push_subscriptions;
+create policy "teachers can read own push subscriptions"
+on public.push_subscriptions
+for select
+to authenticated
+using (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can insert own push subscriptions" on public.push_subscriptions;
+create policy "teachers can insert own push subscriptions"
+on public.push_subscriptions
+for insert
+to authenticated
+with check (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can update own push subscriptions" on public.push_subscriptions;
+create policy "teachers can update own push subscriptions"
+on public.push_subscriptions
+for update
+to authenticated
+using (teacher_id = public.current_teacher_id())
+with check (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can delete own push subscriptions" on public.push_subscriptions;
+create policy "teachers can delete own push subscriptions"
+on public.push_subscriptions
+for delete
+to authenticated
+using (teacher_id = public.current_teacher_id());
+
+revoke all on table public.push_subscriptions from anon, authenticated;
+grant select, insert, update, delete on table public.push_subscriptions to authenticated;

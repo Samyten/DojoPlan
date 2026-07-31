@@ -71,6 +71,16 @@ export function getFriendlyErrorMessage(error: unknown, fallback: string) {
       : "Le Forum n'est pas encore disponible. Contactez l'administrateur.";
   }
 
+  if (normalizedMessage.includes('push_subscriptions')) {
+    return import.meta.env.DEV
+      ? 'Les abonnements Push sont absents de Supabase. Exécutez supabase/migrations/add_push_notifications.sql.'
+      : "Les notifications du téléphone ne sont pas encore disponibles. Contactez l'administrateur.";
+  }
+
+  if (normalizedMessage.includes('notification permission was denied')) {
+    return 'Les notifications sont bloquées. Autorisez-les dans les réglages du navigateur ou du téléphone.';
+  }
+
   if (
     normalizedMessage.includes('no linked teacher profile') ||
     normalizedMessage.includes('aucun profil professeur') ||

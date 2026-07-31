@@ -68,17 +68,79 @@ button:disabled {
   place-items: center;
 }
 
-.install-app-prompt {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+.pwa-prompt {
+  position: fixed;
+  z-index: 40;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 32px;
+  align-items: start;
   gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid #c9c0b7;
+  border-left: 4px solid var(--dojo-red);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 16px 42px rgb(12 10 8 / 20%);
+  padding: 12px;
+  color: var(--ink);
+}
+
+.pwa-prompt[hidden] {
+  display: none;
+}
+
+.pwa-prompt img {
+  border-radius: 50%;
+}
+
+.pwa-prompt__content {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pwa-prompt__content strong {
+  font-size: 0.96rem;
+}
+
+.pwa-prompt__content span,
+.install-app-prompt p {
   color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.pwa-prompt__content .text-button {
+  justify-self: start;
+  min-height: 34px;
+  margin-top: 4px;
+  padding: 4px 0;
+}
+
+.pwa-prompt__close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  place-items: center;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.pwa-prompt__close:hover,
+.pwa-prompt__close:focus-visible {
+  background: var(--gray-soft);
+  color: var(--ink);
 }
 
 .install-app-prompt p {
+  grid-column: 2 / -1;
   margin: 0;
-  font-size: 0.86rem;
 }
 
 .auth-screen {
@@ -1261,6 +1323,25 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.notification-settings {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.notification-settings summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 760;
+}
+
+.notification-settings p {
+  margin: 8px 0;
+}
+
+.notification-settings .text-button {
+  min-height: 38px;
+}
+
 .dev-tools {
   border-top: 1px solid var(--line);
   padding-top: 12px;
@@ -1329,6 +1410,12 @@ button:disabled {
   .app-shell {
     width: min(100% - 20px, 1180px);
     padding: 16px 0;
+  }
+
+  .pwa-prompt {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: min(370px, calc(100vw - 20px));
   }
 
   .app-header {

@@ -15,7 +15,7 @@ Application React + Vite + TypeScript pour organiser les cours entre professeurs
 - Modification du contenu du cours en mode local et en mode Supabase via RPC sécurisée.
 - Fil de modifications récentes.
 - Forum persistant partagé entre tous les professeurs, avec auteur et horodatage.
-- Notifications individuelles pour les nouveaux messages du Forum.
+- Notifications système par appareil pour les nouveaux messages du Forum et les modifications récentes.
 - Application web installable sur iPhone, Android et ordinateur (PWA).
 - Sélecteur d'utilisateur local pour travailler sans Supabase.
 - Connexion Supabase Auth en mode Supabase.
@@ -80,7 +80,11 @@ L'application est une PWA installable avec l'icône officielle du dojo.
 - iPhone/iPad : dans Safari, choisissez `Partager`, puis `Sur l’écran d’accueil`.
 - Une fois installée, l'application s'ouvre sans l'interface du navigateur et reçoit automatiquement les nouvelles versions déployées.
 
-Le service worker contient déjà la réception et l'affichage des futures notifications Web Push. L'abonnement des téléphones et l'envoi côté Supabase restent à mettre en place avant que les notifications système soient actives.
+Une fois l'application installée et ouverte depuis son icône, le réglage `Notifications du téléphone`
+permet d'activer Web Push. Les nouveaux messages du Forum et les nouvelles entrées de
+`Modifications récentes` sont alors affichés dans les notifications système, même lorsque
+l'application est en arrière-plan. La configuration Supabase complète est détaillée dans
+`docs/push-notifications-setup.md`.
 
 Le déploiement doit utiliser HTTPS pour que l'installation PWA et les notifications fonctionnent. Les hébergeurs prévus comme Vercel, Netlify et Cloudflare Pages fournissent HTTPS automatiquement.
 
@@ -104,6 +108,7 @@ Suivez ces étapes dans cet ordre pour le premier vrai test Supabase :
 VITE_DATA_BACKEND=supabase
 VITE_SUPABASE_URL=https://votre-projet.supabase.co
 VITE_SUPABASE_ANON_KEY=votre-cle-anon
+VITE_WEB_PUSH_PUBLIC_KEY=votre-cle-publique-vapid
 ```
 
 12. Lancez l'app :
@@ -144,6 +149,7 @@ Pour un vrai usage par les professeurs, utilisez le backend Supabase. Le mode lo
 VITE_DATA_BACKEND=supabase
 VITE_SUPABASE_URL=https://votre-projet.supabase.co
 VITE_SUPABASE_ANON_KEY=votre-cle-anon
+VITE_WEB_PUSH_PUBLIC_KEY=votre-cle-publique-vapid
 ```
 
 13. Lancez `npm run build`.
@@ -151,6 +157,9 @@ VITE_SUPABASE_ANON_KEY=votre-cle-anon
 15. Connectez-vous avec un admin et vérifiez la création/modification/suppression d'un cours.
 16. Connectez-vous avec un professeur et vérifiez l'absence des contrôles admin.
 17. Vérifiez que les disponibilités, le contenu du cours et les modifications récentes fonctionnent.
+18. Exécutez `supabase/migrations/add_push_notifications.sql`, déployez la fonction Edge et créez
+    les deux webhooks en suivant `docs/push-notifications-setup.md`.
+19. Installez l'application sur un téléphone et vérifiez les notifications avec deux comptes.
 
 À ne pas faire :
 
@@ -172,6 +181,7 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 6. `supabase/migrations/link_hugo_lohan_auth_accounts.sql` (après avoir créé leurs comptes dans Supabase Authentication)
 7. `supabase/migrations/add_forum_messages.sql`
 8. `supabase/migrations/add_forum_read_state.sql`
+9. `supabase/migrations/add_push_notifications.sql`
 
 Ensuite :
 
@@ -230,6 +240,7 @@ Un utilisateur connecté sans profil professeur lié verra une erreur en frança
 - `notification_read_state`
 - `forum_messages`
 - `forum_read_state`
+- `push_subscriptions`
 
 Règles principales :
 
@@ -242,6 +253,7 @@ Règles principales :
 - Chaque professeur peut lire et modifier uniquement son propre état de lecture des notifications.
 - Tous les professeurs authentifiés et liés peuvent lire le Forum et publier uniquement sous leur propre identité.
 - Chaque professeur possède son propre état lu/non lu du Forum.
+- Chaque professeur peut gérer uniquement les abonnements Push de ses propres appareils.
 
 Le Forum conserve l'historique en base. L'interface charge les 200 messages les plus récents afin de rester légère.
 
@@ -275,6 +287,9 @@ npm run test:watch
 - `src/data/repositories/supabaseDojoRepository.ts` : implémentation Supabase.
 - `src/data/repositories/repositoryTypes.ts` : contrat commun des repositories.
 - `src/components/forum/ForumPage.tsx` : historique et saisie des messages du Forum.
+- `src/components/pwa/InstallAppPrompt.tsx` : invite discrète d'installation sur l'écran d'accueil.
+- `src/components/pwa/NotificationPrompt.tsx` : activation et désactivation Web Push par appareil.
+- `src/sw.ts` : cache PWA, réception des Push et ouverture du bon onglet.
 - `src/data/recurringSchedule.ts` : planning hebdomadaire réel du dojo.
 - `src/data/holidayCalendar.ts` : vacances scolaires Zone C / Perpignan, jours fériés et pont de l'Ascension.
 - `src/utils/sessionGeneration.ts` : génération des cours récurrents avec exclusion des vacances.
@@ -288,6 +303,9 @@ npm run test:watch
 - `supabase/migrations/add_notification_read_state.sql` : ajoute le suivi privé lu/non lu des modifications récentes.
 - `supabase/migrations/add_forum_messages.sql` : ajoute le Forum persistant et ses policies RLS.
 - `supabase/migrations/add_forum_read_state.sql` : ajoute le suivi individuel des messages lus du Forum.
+- `supabase/migrations/add_push_notifications.sql` : abonnements Web Push privés et RLS.
+- `supabase/functions/send-push-notifications/index.ts` : envoi serveur pour le Forum et les modifications.
+- `docs/push-notifications-setup.md` : déploiement des clés VAPID, de la fonction et des webhooks.
 - `supabase/migrations/link_hugo_lohan_auth_accounts.sql` : met à jour et lie les profils Auth de Hugo et Lohan sans stocker leurs mots de passe.
 - `supabase/verify.sql` : requêtes read-only pour vérifier le setup Supabase.
 - `docs/supabase-live-test-plan.md` : scénario manuel pour tester admin/professeur.
