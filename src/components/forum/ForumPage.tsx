@@ -5,6 +5,7 @@ import { formatForumTimestamp } from '../../utils/dates';
 
 interface ForumPageProps {
   messages: ForumMessage[];
+  unreadMessageIds: ReadonlySet<string>;
   currentTeacher?: Teacher;
   isLoading: boolean;
   isSending: boolean;
@@ -15,6 +16,7 @@ interface ForumPageProps {
 
 export function ForumPage({
   messages,
+  unreadMessageIds,
   currentTeacher,
   isLoading,
   isSending,
@@ -85,15 +87,25 @@ export function ForumPage({
         {!isLoading && !messages.length ? (
           <p className="empty-state">Aucun message pour le moment.</p>
         ) : null}
-        {messages.map((message) => (
-          <article className="forum-message" key={message.id}>
+        {messages.map((message) => {
+          const isUnread = unreadMessageIds.has(message.id);
+
+          return (
+          <article
+            className={isUnread ? 'forum-message forum-message--unread' : 'forum-message'}
+            key={message.id}
+          >
             <div className="forum-message__meta">
               <strong>{message.authorName}</strong>
-              <time dateTime={message.createdAt}>{formatForumTimestamp(message.createdAt)}</time>
+              <div className="forum-message__status">
+                {isUnread ? <span className="unread-label">Non lu</span> : null}
+                <time dateTime={message.createdAt}>{formatForumTimestamp(message.createdAt)}</time>
+              </div>
             </div>
             <p>{message.message}</p>
           </article>
-        ))}
+          );
+        })}
       </div>
 
       <form className="forum-composer" onSubmit={(event) => void handleSubmit(event)}>

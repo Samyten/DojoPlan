@@ -15,6 +15,8 @@ Application React + Vite + TypeScript pour organiser les cours entre professeurs
 - Modification du contenu du cours en mode local et en mode Supabase via RPC sécurisée.
 - Fil de modifications récentes.
 - Forum persistant partagé entre tous les professeurs, avec auteur et horodatage.
+- Notifications individuelles pour les nouveaux messages du Forum.
+- Application web installable sur iPhone, Android et ordinateur (PWA).
 - Sélecteur d'utilisateur local pour travailler sans Supabase.
 - Connexion Supabase Auth en mode Supabase.
 - Création, modification et suppression de cours réservées aux admins.
@@ -69,6 +71,18 @@ Variables facultatives :
 ```env
 VITE_DATA_BACKEND=local
 ```
+
+## Installation sur téléphone
+
+L'application est une PWA installable avec l'icône officielle du dojo.
+
+- Android : utilisez le bouton `Installer l’application` proposé par le navigateur.
+- iPhone/iPad : dans Safari, choisissez `Partager`, puis `Sur l’écran d’accueil`.
+- Une fois installée, l'application s'ouvre sans l'interface du navigateur et reçoit automatiquement les nouvelles versions déployées.
+
+Le service worker contient déjà la réception et l'affichage des futures notifications Web Push. L'abonnement des téléphones et l'envoi côté Supabase restent à mettre en place avant que les notifications système soient actives.
+
+Le déploiement doit utiliser HTTPS pour que l'installation PWA et les notifications fonctionnent. Les hébergeurs prévus comme Vercel, Netlify et Cloudflare Pages fournissent HTTPS automatiquement.
 
 ## Checklist premier test Supabase live
 
@@ -157,6 +171,7 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 5. `supabase/migrations/add_notification_read_state.sql`
 6. `supabase/migrations/link_hugo_lohan_auth_accounts.sql` (après avoir créé leurs comptes dans Supabase Authentication)
 7. `supabase/migrations/add_forum_messages.sql`
+8. `supabase/migrations/add_forum_read_state.sql`
 
 Ensuite :
 
@@ -214,6 +229,7 @@ Un utilisateur connecté sans profil professeur lié verra une erreur en frança
 - `change_log_entries`
 - `notification_read_state`
 - `forum_messages`
+- `forum_read_state`
 
 Règles principales :
 
@@ -225,6 +241,7 @@ Règles principales :
 - Les entrées de journal ne peuvent être insérées qu'avec `actor_teacher_id = current_teacher_id()`.
 - Chaque professeur peut lire et modifier uniquement son propre état de lecture des notifications.
 - Tous les professeurs authentifiés et liés peuvent lire le Forum et publier uniquement sous leur propre identité.
+- Chaque professeur possède son propre état lu/non lu du Forum.
 
 Le Forum conserve l'historique en base. L'interface charge les 200 messages les plus récents afin de rester légère.
 
@@ -270,6 +287,7 @@ npm run test:watch
 - `supabase/migrations/add_bulk_availability_rpc.sql` : ajoute la RPC de disponibilités en série et admin pour production existante.
 - `supabase/migrations/add_notification_read_state.sql` : ajoute le suivi privé lu/non lu des modifications récentes.
 - `supabase/migrations/add_forum_messages.sql` : ajoute le Forum persistant et ses policies RLS.
+- `supabase/migrations/add_forum_read_state.sql` : ajoute le suivi individuel des messages lus du Forum.
 - `supabase/migrations/link_hugo_lohan_auth_accounts.sql` : met à jour et lie les profils Auth de Hugo et Lohan sans stocker leurs mots de passe.
 - `supabase/verify.sql` : requêtes read-only pour vérifier le setup Supabase.
 - `docs/supabase-live-test-plan.md` : scénario manuel pour tester admin/professeur.

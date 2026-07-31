@@ -59,10 +59,13 @@ export function getFriendlyErrorMessage(error: unknown, fallback: string) {
       : "Le suivi des notifications n'est pas encore disponible. Contactez l'administrateur.";
   }
 
-  if (
-    normalizedMessage.includes('forum_messages') ||
-    (normalizedMessage.includes('42p01') && normalizedMessage.includes('forum'))
-  ) {
+  if (normalizedMessage.includes('forum_read_state')) {
+    return import.meta.env.DEV
+      ? 'Le suivi des messages non lus du Forum est absent de Supabase. Exécutez supabase/migrations/add_forum_read_state.sql.'
+      : "Le suivi des messages du Forum n'est pas encore disponible. Contactez l'administrateur.";
+  }
+
+  if (normalizedMessage.includes('forum_messages')) {
     return import.meta.env.DEV
       ? 'Le Forum est absent de Supabase. Exécutez supabase/migrations/add_forum_messages.sql.'
       : "Le Forum n'est pas encore disponible. Contactez l'administrateur.";

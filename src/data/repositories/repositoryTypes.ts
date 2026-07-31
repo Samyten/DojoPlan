@@ -19,6 +19,8 @@ export interface DojoRepository {
   getAllAvailability(): Promise<Availability[]>;
   getRecentChanges(): Promise<DojoDataState['changes']>;
   getForumMessages(): Promise<ForumMessage[]>;
+  getForumReadAt(teacherId: string): Promise<string | undefined>;
+  markForumRead(teacherId: string, readThrough: string): Promise<string>;
   getNotificationReadAt(teacherId: string): Promise<string | undefined>;
   markNotificationsRead(teacherId: string, readThrough: string): Promise<string>;
   getDojoData(): Promise<DojoDataState>;

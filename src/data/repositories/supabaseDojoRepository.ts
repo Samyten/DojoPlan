@@ -168,6 +168,44 @@ export async function getForumMessages(): Promise<ForumMessage[]> {
   return (data as ForumMessageRow[]).map(mapForumMessageRow).reverse();
 }
 
+export async function getForumReadAt(teacherId: string): Promise<string | undefined> {
+  const { data, error } = await getSupabaseClient()
+    .from('forum_read_state')
+    .select('teacher_id,last_read_at')
+    .eq('teacher_id', teacherId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as NotificationReadStateRow | null)?.last_read_at;
+}
+
+export async function markForumRead(
+  teacherId: string,
+  readThrough: string,
+): Promise<string> {
+  const { data, error } = await getSupabaseClient()
+    .from('forum_read_state')
+    .upsert(
+      {
+        teacher_id: teacherId,
+        last_read_at: readThrough,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'teacher_id' },
+    )
+    .select('teacher_id,last_read_at')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as NotificationReadStateRow).last_read_at;
+}
+
 export async function getNotificationReadAt(teacherId: string): Promise<string | undefined> {
   const { data, error } = await getSupabaseClient()
     .from('notification_read_state')

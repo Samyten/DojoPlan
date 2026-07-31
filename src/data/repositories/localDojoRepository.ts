@@ -19,6 +19,7 @@ import { assertValidSessionInput } from '../../utils/sessionValidation';
 const STORAGE_KEY = 'dojo-planning.mock-state.v8';
 const NOTIFICATION_READ_STORAGE_KEY = 'dojo-planning.notification-read.v1';
 const FORUM_MESSAGES_STORAGE_KEY = 'dojo-planning.forum-messages.v1';
+const FORUM_READ_STORAGE_KEY = 'dojo-planning.forum-read.v1';
 
 function cloneState(state: DojoDataState): DojoDataState {
   return structuredClone(state);
@@ -97,6 +98,27 @@ function loadForumMessages(): ForumMessage[] {
 function saveForumMessages(messages: ForumMessage[]) {
   if (canUseLocalStorage()) {
     window.localStorage.setItem(FORUM_MESSAGES_STORAGE_KEY, JSON.stringify(messages));
+  }
+}
+
+function loadForumReadState(): Record<string, string> {
+  if (!canUseLocalStorage()) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(window.localStorage.getItem(FORUM_READ_STORAGE_KEY) ?? '{}') as Record<
+      string,
+      string
+    >;
+  } catch {
+    return {};
+  }
+}
+
+function saveForumReadState(state: Record<string, string>) {
+  if (canUseLocalStorage()) {
+    window.localStorage.setItem(FORUM_READ_STORAGE_KEY, JSON.stringify(state));
   }
 }
 
@@ -278,6 +300,28 @@ export async function getRecentChanges(): Promise<ChangeLogEntry[]> {
 
 export async function getForumMessages(): Promise<ForumMessage[]> {
   return loadForumMessages();
+}
+
+export async function getForumReadAt(teacherId: string): Promise<string | undefined> {
+  return loadForumReadState()[teacherId];
+}
+
+export async function markForumRead(teacherId: string, readThrough: string): Promise<string> {
+  const state = loadState();
+
+  if (!findTeacher(state, teacherId)) {
+    throw new Error('Cannot update Forum read state for an unknown teacher.');
+  }
+
+  const readState = loadForumReadState();
+  const nextReadAt =
+    readState[teacherId] && readState[teacherId] > readThrough
+      ? readState[teacherId]
+      : readThrough;
+
+  readState[teacherId] = nextReadAt;
+  saveForumReadState(readState);
+  return nextReadAt;
 }
 
 export async function getNotificationReadAt(teacherId: string): Promise<string | undefined> {
@@ -766,6 +810,7 @@ export async function resetMockData(): Promise<DojoDataState> {
   if (canUseLocalStorage()) {
     window.localStorage.removeItem(NOTIFICATION_READ_STORAGE_KEY);
     window.localStorage.removeItem(FORUM_MESSAGES_STORAGE_KEY);
+    window.localStorage.removeItem(FORUM_READ_STORAGE_KEY);
   }
   return toSnapshot(state);
 }

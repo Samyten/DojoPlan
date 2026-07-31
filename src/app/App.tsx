@@ -8,6 +8,7 @@ import { SessionCalendar } from '../components/sessions/SessionCalendar';
 import { SessionDetails } from '../components/sessions/SessionDetails';
 import { TeachersPage } from '../components/teachers/TeachersPage';
 import { ForumPage } from '../components/forum/ForumPage';
+import { InstallAppPrompt } from '../components/pwa/InstallAppPrompt';
 import { LoginScreen } from '../auth/LoginScreen';
 import { useAuth } from '../auth/useAuth';
 import {
@@ -20,7 +21,9 @@ import {
   getDojoData,
   getDojoDataSnapshot,
   getForumMessages,
+  getForumReadAt,
   getNotificationReadAt,
+  markForumRead,
   markNotificationsRead,
   reorderTeachers,
   resetMockData,
@@ -67,6 +70,11 @@ export function App() {
   const [isForumLoading, setIsForumLoading] = useState(false);
   const [isForumSending, setIsForumSending] = useState(false);
   const [forumError, setForumError] = useState<string | undefined>();
+  const [forumReadAt, setForumReadAt] = useState<string | undefined>();
+  const [forumReadTeacherId, setForumReadTeacherId] = useState<string | undefined>();
+  const [visibleUnreadForumMessageIds, setVisibleUnreadForumMessageIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   function applyLoadedData(nextData: DojoDataState) {
     setData(nextData);
@@ -133,18 +141,76 @@ export function App() {
     };
   }, [currentTeacher]);
 
+  useEffect(() => {
+    if (!currentTeacher) {
+      return;
+    }
+
+    let cancelled = false;
+    void Promise.all([getForumMessages(), getForumReadAt(currentTeacher.id)])
+      .then(([messages, readAt]) => {
+        if (!cancelled) {
+          setVisibleUnreadForumMessageIds(new Set());
+          setForumMessages(messages);
+          setForumReadAt(readAt);
+          setForumReadTeacherId(currentTeacher.id);
+        }
+      })
+      .catch((loadError: unknown) => {
+        if (!cancelled) {
+          setForumError(
+            getFriendlyErrorMessage(
+              loadError,
+              "Les notifications du Forum n'ont pas pu être chargées.",
+            ),
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentTeacher]);
+
   async function refreshData() {
     const nextData = await getDojoData();
     applyLoadedData(nextData);
     return nextData;
   }
 
-  async function refreshForumMessages() {
+  async function refreshForumMessages(markVisibleMessagesAsRead = false) {
     setIsForumLoading(true);
     setForumError(undefined);
 
     try {
-      setForumMessages(await getForumMessages());
+      const [messages, readAt] = await Promise.all([
+        getForumMessages(),
+        currentTeacher ? getForumReadAt(currentTeacher.id) : Promise.resolve(undefined),
+      ]);
+      setForumMessages(messages);
+
+      if (currentTeacher) {
+        setForumReadAt(readAt);
+        setForumReadTeacherId(currentTeacher.id);
+      }
+
+      if (markVisibleMessagesAsRead && currentTeacher) {
+        const unreadMessages = messages.filter(
+          (message) => !readAt || message.createdAt > readAt,
+        );
+        setVisibleUnreadForumMessageIds(new Set(unreadMessages.map((message) => message.id)));
+
+        const latestMessageAt = messages.reduce<string | undefined>(
+          (latest, message) =>
+            !latest || message.createdAt > latest ? message.createdAt : latest,
+          undefined,
+        );
+
+        if (latestMessageAt && unreadMessages.length) {
+          const savedReadAt = await markForumRead(currentTeacher.id, latestMessageAt);
+          setForumReadAt(savedReadAt);
+        }
+      }
     } catch (loadError) {
       setForumError(
         getFriendlyErrorMessage(loadError, "Les messages du Forum n'ont pas pu être chargés."),
@@ -174,15 +240,33 @@ export function App() {
     );
   }, [currentTeacher, data.changes, notificationReadAt, notificationReadTeacherId]);
 
+  const unreadForumMessages = useMemo(() => {
+    if (!currentTeacher || forumReadTeacherId !== currentTeacher.id) {
+      return [];
+    }
+
+    return forumMessages.filter(
+      (message) => !forumReadAt || message.createdAt > forumReadAt,
+    );
+  }, [currentTeacher, forumMessages, forumReadAt, forumReadTeacherId]);
+
   function handleChangeView(view: AppView) {
     setActiveView(view);
 
+    if (view !== 'changes') {
+      setVisibleUnreadChangeIds(new Set());
+    }
+
+    if (view !== 'forum') {
+      setVisibleUnreadForumMessageIds(new Set());
+    }
+
     if (view === 'forum') {
-      void refreshForumMessages();
+      void refreshForumMessages(true);
+      return;
     }
 
     if (view !== 'changes') {
-      setVisibleUnreadChangeIds(new Set());
       return;
     }
 
@@ -257,6 +341,19 @@ export function App() {
           left.createdAt.localeCompare(right.createdAt),
         ),
       );
+      void markForumRead(currentTeacher.id, createdMessage.createdAt)
+        .then((readAt) => {
+          setForumReadAt(readAt);
+          setForumReadTeacherId(currentTeacher.id);
+        })
+        .catch((readError: unknown) => {
+          setForumError(
+            getFriendlyErrorMessage(
+              readError,
+              "Le message a été envoyé, mais son état de lecture n'a pas pu être enregistré.",
+            ),
+          );
+        });
       return true;
     } catch (saveError) {
       setForumError(
@@ -497,6 +594,9 @@ export function App() {
         startOfMonth(parseLocalDate(nextData.sessions[0]?.date ?? new Date().toISOString().slice(0, 10))),
       );
       setForumMessages([]);
+      setForumReadAt(undefined);
+      setForumReadTeacherId(undefined);
+      setVisibleUnreadForumMessageIds(new Set());
     } catch (saveError) {
       setError(getFriendlyErrorMessage(saveError, "Les données de test n'ont pas pu être réinitialisées."));
     } finally {
@@ -543,6 +643,7 @@ export function App() {
       <MainNav
         activeView={activeView}
         unreadChangeCount={unreadChanges.length}
+        unreadForumCount={unreadForumMessages.length}
         onChangeView={handleChangeView}
       />
 
@@ -615,17 +716,19 @@ export function App() {
         <main>
           <ForumPage
             messages={forumMessages}
+            unreadMessageIds={visibleUnreadForumMessageIds}
             currentTeacher={currentTeacher}
             isLoading={isForumLoading}
             isSending={isForumSending}
             error={forumError}
-            onRefresh={refreshForumMessages}
+            onRefresh={() => refreshForumMessages(true)}
             onSendMessage={handleSendForumMessage}
           />
         </main>
       ) : null}
 
       <footer className="app-footer">
+        <InstallAppPrompt />
         <SupabaseDiagnostics
           authError={authError}
           authUser={authUser}

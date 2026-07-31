@@ -55,7 +55,8 @@ where schemaname = 'public'
     'availability',
     'change_log_entries',
     'notification_read_state',
-    'forum_messages'
+    'forum_messages',
+    'forum_read_state'
   )
 order by tablename;
 
@@ -69,7 +70,8 @@ where schemaname = 'public'
     'availability',
     'change_log_entries',
     'notification_read_state',
-    'forum_messages'
+    'forum_messages',
+    'forum_read_state'
   )
 order by tablename, policyname;
 
@@ -103,6 +105,7 @@ select count(*) as availability_count from public.availability;
 select count(*) as change_log_count from public.change_log_entries;
 select count(*) as notification_read_state_count from public.notification_read_state;
 select count(*) as forum_message_count from public.forum_messages;
+select count(*) as forum_read_state_count from public.forum_read_state;
 
 -- Most recent Forum messages and their stored author names.
 select id, teacher_id, author_name, message, created_at

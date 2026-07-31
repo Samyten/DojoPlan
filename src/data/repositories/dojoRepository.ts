@@ -25,6 +25,12 @@ export const getRecentChanges: DojoRepository['getRecentChanges'] = (...args) =>
 export const getForumMessages: DojoRepository['getForumMessages'] = (...args) =>
   getRepository().getForumMessages(...args);
 
+export const getForumReadAt: DojoRepository['getForumReadAt'] = (...args) =>
+  getRepository().getForumReadAt(...args);
+
+export const markForumRead: DojoRepository['markForumRead'] = (...args) =>
+  getRepository().markForumRead(...args);
+
 export const getNotificationReadAt: DojoRepository['getNotificationReadAt'] = (...args) =>
   getRepository().getNotificationReadAt(...args);
 

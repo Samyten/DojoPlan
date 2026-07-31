@@ -9,9 +9,11 @@ import {
   deleteTeacher,
   getDojoDataSnapshot,
   getForumMessages,
+  getForumReadAt,
   getNotificationReadAt,
   getRecentChanges,
   markNotificationsRead,
+  markForumRead,
   reorderTeachers,
   resetMockData,
   updateAvailability,
@@ -465,6 +467,21 @@ describe('dojoRepository forum messages', () => {
       'between 1 and 2000',
     );
     expect(await getForumMessages()).toHaveLength(0);
+  });
+
+  it('keeps an individual Forum read marker for each teacher', async () => {
+    const message = await createForumMessage('Information à lire.', adminId);
+
+    expect(await getForumReadAt(teacherId)).toBeUndefined();
+
+    const savedReadAt = await markForumRead(teacherId, message.createdAt);
+
+    expect(savedReadAt).toBe(message.createdAt);
+    expect(await getForumReadAt(teacherId)).toBe(message.createdAt);
+    expect(await getForumReadAt(adminId)).toBeUndefined();
+
+    await markForumRead(teacherId, '2020-01-01T00:00:00.000Z');
+    expect(await getForumReadAt(teacherId)).toBe(message.createdAt);
   });
 });
 

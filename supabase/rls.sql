@@ -54,6 +54,7 @@ alter table public.availability enable row level security;
 alter table public.change_log_entries enable row level security;
 alter table public.notification_read_state enable row level security;
 alter table public.forum_messages enable row level security;
+alter table public.forum_read_state enable row level security;
 
 drop policy if exists "authenticated teachers can read teachers" on public.teachers;
 create policy "authenticated teachers can read teachers"
@@ -235,3 +236,30 @@ with check (
 
 revoke all on table public.forum_messages from anon, authenticated;
 grant select, insert on table public.forum_messages to authenticated;
+
+-- Each teacher owns their Forum read marker. Reading the Forum for one account cannot
+-- clear the notification badge for any other account.
+drop policy if exists "teachers can read own forum state" on public.forum_read_state;
+create policy "teachers can read own forum state"
+on public.forum_read_state
+for select
+to authenticated
+using (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can insert own forum state" on public.forum_read_state;
+create policy "teachers can insert own forum state"
+on public.forum_read_state
+for insert
+to authenticated
+with check (teacher_id = public.current_teacher_id());
+
+drop policy if exists "teachers can update own forum state" on public.forum_read_state;
+create policy "teachers can update own forum state"
+on public.forum_read_state
+for update
+to authenticated
+using (teacher_id = public.current_teacher_id())
+with check (teacher_id = public.current_teacher_id());
+
+revoke all on table public.forum_read_state from anon, authenticated;
+grant select, insert, update on table public.forum_read_state to authenticated;
