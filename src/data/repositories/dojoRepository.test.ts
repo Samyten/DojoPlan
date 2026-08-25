@@ -52,11 +52,36 @@ describe('dojoRepository public planning', () => {
 
     expect(firstPublicSession).toBeDefined();
     expect(Object.keys(firstPublicSession).sort()).toEqual(
-      ['date', 'endTime', 'id', 'location', 'startTime', 'title'].sort(),
+      [
+        'date',
+        'endTime',
+        'id',
+        'location',
+        'presentTeacherNames',
+        'startTime',
+        'title',
+      ].sort(),
     );
 
     firstPublicSession.title = 'Modification locale du test';
+    firstPublicSession.presentTeacherNames.push('Modification locale');
     expect((await getPublicSessions())[0].title).not.toBe('Modification locale du test');
+    expect((await getPublicSessions())[0].presentTeacherNames).not.toContain(
+      'Modification locale',
+    );
+  });
+
+  it('exposes only the names of teachers marked present', async () => {
+    const session = firstSession();
+
+    await updateAvailability(session.id, teacherId, 'present', 'Commentaire privé');
+    await updateAvailability(session.id, adminId, 'absent', 'Autre commentaire privé');
+
+    const publicSession = (await getPublicSessions()).find((item) => item.id === session.id);
+
+    expect(publicSession?.presentTeacherNames).toEqual(['Christian Martinez']);
+    expect(JSON.stringify(publicSession)).not.toContain('Commentaire privé');
+    expect(JSON.stringify(publicSession)).not.toContain('absent');
   });
 });
 

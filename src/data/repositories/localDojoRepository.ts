@@ -10,6 +10,7 @@ import type {
   DojoDataState,
   ForumMessage,
   PushSubscriptionInput,
+  PublicSession,
   Session,
   Teacher,
   UpdateSessionInput,
@@ -310,8 +311,26 @@ export async function getSessions(): Promise<Session[]> {
   return toSnapshot(loadState()).sessions;
 }
 
-export async function getPublicSessions() {
-  return toSnapshot(loadState()).sessions.map(
+export async function getPublicSessions(): Promise<PublicSession[]> {
+  const snapshot = toSnapshot(loadState());
+  const teacherNames = new Map(snapshot.teachers.map((teacher) => [teacher.id, teacher.name]));
+  const presentTeacherNames = new Map<string, string[]>();
+
+  for (const item of snapshot.availability) {
+    if (item.status !== 'present') {
+      continue;
+    }
+
+    const teacherName = teacherNames.get(item.teacherId);
+
+    if (teacherName) {
+      const names = presentTeacherNames.get(item.sessionId) ?? [];
+      names.push(teacherName);
+      presentTeacherNames.set(item.sessionId, names);
+    }
+  }
+
+  return snapshot.sessions.map(
     ({ id, title, date, startTime, endTime, location }) => ({
       id,
       title,
@@ -319,6 +338,7 @@ export async function getPublicSessions() {
       startTime,
       endTime,
       location,
+      presentTeacherNames: presentTeacherNames.get(id) ?? [],
     }),
   );
 }

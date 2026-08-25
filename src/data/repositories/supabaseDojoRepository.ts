@@ -47,6 +47,11 @@ type PublicSessionRow = Pick<
   'id' | 'title' | 'date' | 'start_time' | 'end_time' | 'location'
 >;
 
+type PublicSessionAttendanceRow = {
+  session_id: string;
+  teacher_name: string;
+};
+
 type AvailabilityRow = {
   id: string;
   session_id: string;
@@ -124,17 +129,35 @@ export async function getSessions(): Promise<Session[]> {
 }
 
 export async function getPublicSessions(): Promise<PublicSession[]> {
-  const { data, error } = await getSupabaseClient()
-    .from('sessions')
-    .select('id,title,date,start_time,end_time,location')
-    .order('date')
-    .order('start_time');
+  const client = getSupabaseClient();
+  const [sessionsResult, attendanceResult] = await Promise.all([
+    client
+      .from('sessions')
+      .select('id,title,date,start_time,end_time,location')
+      .order('date')
+      .order('start_time'),
+    client.rpc('get_public_session_attendees'),
+  ]);
 
-  if (error) {
-    throw error;
+  if (sessionsResult.error) {
+    throw sessionsResult.error;
   }
 
-  return (data as PublicSessionRow[]).map(mapPublicSessionRow).sort(compareSessionDateTime);
+  if (attendanceResult.error) {
+    throw attendanceResult.error;
+  }
+
+  const namesBySession = new Map<string, string[]>();
+
+  for (const row of attendanceResult.data as PublicSessionAttendanceRow[]) {
+    const names = namesBySession.get(row.session_id) ?? [];
+    names.push(row.teacher_name);
+    namesBySession.set(row.session_id, names);
+  }
+
+  return (sessionsResult.data as PublicSessionRow[])
+    .map((row) => mapPublicSessionRow(row, namesBySession.get(row.id) ?? []))
+    .sort(compareSessionDateTime);
 }
 
 export async function getAvailabilityForSession(sessionId: string): Promise<Availability[]> {
@@ -854,7 +877,10 @@ function mapSessionRow(row: SessionRow): Session {
   };
 }
 
-function mapPublicSessionRow(row: PublicSessionRow): PublicSession {
+function mapPublicSessionRow(
+  row: PublicSessionRow,
+  presentTeacherNames: string[],
+): PublicSession {
   return {
     id: row.id,
     title: row.title,
@@ -862,6 +888,7 @@ function mapPublicSessionRow(row: PublicSessionRow): PublicSession {
     startTime: row.start_time.slice(0, 5),
     endTime: row.end_time.slice(0, 5),
     location: row.location ?? undefined,
+    presentTeacherNames,
   };
 }
 

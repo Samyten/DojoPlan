@@ -40,10 +40,10 @@ export interface Session {
   updatedAt: string;
 }
 
-export type PublicSession = Pick<
-  Session,
-  'id' | 'title' | 'date' | 'startTime' | 'endTime' | 'location'
->;
+export interface PublicSession
+  extends Pick<Session, 'id' | 'title' | 'date' | 'startTime' | 'endTime' | 'location'> {
+  presentTeacherNames: string[];
+}
 
 export interface CreateSessionInput {
   title: string;

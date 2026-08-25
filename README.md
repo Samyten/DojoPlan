@@ -19,7 +19,7 @@ Application React + Vite + TypeScript pour organiser les cours entre professeurs
 - Application web installable sur iPhone, Android et ordinateur (PWA).
 - Sélecteur d'utilisateur local pour travailler sans Supabase.
 - Connexion Supabase Auth en mode Supabase.
-- Consultation publique du calendrier sans compte, limitée aux horaires et lieux des cours.
+- Consultation publique du calendrier sans compte, limitée aux horaires, lieux et professeurs présents.
 - Création, modification et suppression de cours réservées aux admins.
 - Gestion des professeurs réservée au super administrateur.
 - Repository local basé sur localStorage et repository Supabase derrière la même API.
@@ -184,6 +184,9 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 8. `supabase/migrations/add_forum_read_state.sql`
 9. `supabase/migrations/add_push_notifications.sql`
 10. `supabase/migrations/add_public_planning_access.sql`
+11. `supabase/migrations/add_public_planning_attendance.sql`
+12. `supabase/migrations/harden_auth_helper_function_grants.sql`
+13. `supabase/migrations/remove_anon_auth_helper_grants.sql`
 
 Ensuite :
 
@@ -229,11 +232,12 @@ Sur l'écran de connexion, le bouton `Consulter le planning sans se connecter` o
 calendrier public en lecture seule. L'URL peut également être ouverte directement avec
 `?public=planning`.
 
-Le visiteur peut uniquement voir le titre, la date, les horaires et le lieu des cours. Le
-contenu pédagogique, les notes, les disponibilités, les professeurs, le Forum et les
-modifications récentes restent privés. Cette limitation repose à la fois sur RLS et sur des
-droits de colonnes PostgreSQL définis dans
-`supabase/migrations/add_public_planning_access.sql`.
+Le visiteur peut uniquement voir le titre, la date, les horaires, le lieu et les noms des
+professeurs ayant explicitement indiqué qu'ils seront présents. Les commentaires, les statuts
+absent/peut-être/non renseigné, le contenu pédagogique, les notes, la liste complète des
+professeurs, le Forum et les modifications récentes restent privés. Cette limitation repose
+sur RLS, des droits de colonnes PostgreSQL et la fonction étroite définie dans
+`supabase/migrations/add_public_planning_attendance.sql`.
 
 ## Checklist comptes avant production
 

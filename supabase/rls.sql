@@ -48,6 +48,19 @@ as $$
   select coalesce(public.current_teacher_role() = 'super_admin', false)
 $$;
 
+revoke all on function public.current_teacher_id() from public;
+revoke all on function public.current_teacher_role() from public;
+revoke all on function public.current_teacher_is_admin() from public;
+revoke all on function public.current_teacher_is_super_admin() from public;
+revoke all on function public.current_teacher_id() from anon;
+revoke all on function public.current_teacher_role() from anon;
+revoke all on function public.current_teacher_is_admin() from anon;
+revoke all on function public.current_teacher_is_super_admin() from anon;
+grant execute on function public.current_teacher_id() to authenticated;
+grant execute on function public.current_teacher_role() to authenticated;
+grant execute on function public.current_teacher_is_admin() to authenticated;
+grant execute on function public.current_teacher_is_super_admin() to authenticated;
+
 alter table public.teachers enable row level security;
 alter table public.sessions enable row level security;
 alter table public.availability enable row level security;
@@ -127,6 +140,31 @@ on table public.sessions to anon;
 revoke all on table public.teachers from anon;
 revoke all on table public.availability from anon;
 revoke all on table public.change_log_entries from anon;
+
+-- Anonymous planning visitors may see only the display names explicitly marked present.
+-- Direct access to teachers and availability stays revoked above.
+create or replace function public.get_public_session_attendees()
+returns table (
+  session_id uuid,
+  teacher_name text
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select availability.session_id, teachers.name
+  from public.availability
+  join public.teachers on teachers.id = availability.teacher_id
+  where availability.status = 'present'
+  order by
+    availability.session_id,
+    teachers.display_order asc nulls last,
+    teachers.name asc
+$$;
+
+revoke all on function public.get_public_session_attendees() from public;
+grant execute on function public.get_public_session_attendees() to anon, authenticated;
 
 drop policy if exists "admins can insert sessions" on public.sessions;
 create policy "admins can insert sessions"

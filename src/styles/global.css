@@ -684,6 +684,13 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.day-session-button .public-session-attendance {
+  margin-top: 4px;
+  color: var(--ink);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .day-session-button--active {
   border-color: var(--accent);
   background: var(--accent-soft);

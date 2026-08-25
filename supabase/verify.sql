@@ -91,6 +91,7 @@ where n.nspname = 'public'
     'current_teacher_role',
     'current_teacher_is_admin',
     'current_teacher_is_super_admin',
+    'get_public_session_attendees',
     'update_session_lesson_content'
   )
 order by p.proname;
@@ -101,6 +102,22 @@ select has_function_privilege(
   'public.update_session_lesson_content(uuid,text,text)',
   'execute'
 ) as authenticated_can_execute_lesson_content_rpc;
+
+-- Public planning can read the narrow present-name result, but not its source tables.
+select
+  has_function_privilege(
+    'anon',
+    'public.get_public_session_attendees()',
+    'execute'
+  ) as anonymous_can_read_present_names,
+  has_table_privilege('anon', 'public.teachers', 'select') as anonymous_can_read_teachers,
+  has_table_privilege('anon', 'public.availability', 'select') as anonymous_can_read_availability,
+  has_column_privilege(
+    'anon',
+    'public.sessions',
+    'lesson_plan',
+    'select'
+  ) as anonymous_can_read_lesson_plan;
 
 -- Availability and recent change counts.
 select count(*) as availability_count from public.availability;

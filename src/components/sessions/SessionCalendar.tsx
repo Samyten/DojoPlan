@@ -1,4 +1,4 @@
-import type { PublicSession } from '../../types';
+import type { PublicSession, Session } from '../../types';
 import { getHolidayInfo } from '../../data/holidayCalendar';
 import {
   addDays,
@@ -13,9 +13,10 @@ import {
 } from '../../utils/dates';
 
 const weekdayLabels = ['Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.', 'Dim.'];
+type CalendarSession = Session | PublicSession;
 
 interface SessionCalendarProps {
-  sessions: PublicSession[];
+  sessions: CalendarSession[];
   currentMonth: Date;
   selectedDate: string | undefined;
   selectedSessionId: string | undefined;
@@ -153,6 +154,13 @@ export function SessionCalendar({
               >
                 <strong>{session.title}</strong>
                 <span>{formatTimeRange(session.startTime, session.endTime)}</span>
+                {'presentTeacherNames' in session ? (
+                  <span className="public-session-attendance">
+                    {session.presentTeacherNames.length
+                      ? `Présents : ${session.presentTeacherNames.join(', ')}`
+                      : 'Aucun professeur indiqué présent.'}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>
@@ -168,8 +176,8 @@ export function SessionCalendar({
   );
 }
 
-function groupSessionsByDate(sessions: PublicSession[]) {
-  const sessionsByDate = new Map<string, PublicSession[]>();
+function groupSessionsByDate(sessions: CalendarSession[]) {
+  const sessionsByDate = new Map<string, CalendarSession[]>();
 
   for (const session of sessions) {
     const currentSessions = sessionsByDate.get(session.date) ?? [];
