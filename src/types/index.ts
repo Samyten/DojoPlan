@@ -40,6 +40,11 @@ export interface Session {
   updatedAt: string;
 }
 
+export type PublicSession = Pick<
+  Session,
+  'id' | 'title' | 'date' | 'startTime' | 'endTime' | 'location'
+>;
+
 export interface CreateSessionInput {
   title: string;
   date: string;

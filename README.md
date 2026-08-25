@@ -19,6 +19,7 @@ Application React + Vite + TypeScript pour organiser les cours entre professeurs
 - Application web installable sur iPhone, Android et ordinateur (PWA).
 - Sélecteur d'utilisateur local pour travailler sans Supabase.
 - Connexion Supabase Auth en mode Supabase.
+- Consultation publique du calendrier sans compte, limitée aux horaires et lieux des cours.
 - Création, modification et suppression de cours réservées aux admins.
 - Gestion des professeurs réservée au super administrateur.
 - Repository local basé sur localStorage et repository Supabase derrière la même API.
@@ -182,6 +183,7 @@ Pour cette version, exécutez uniquement ces migrations additives dans Supabase 
 7. `supabase/migrations/add_forum_messages.sql`
 8. `supabase/migrations/add_forum_read_state.sql`
 9. `supabase/migrations/add_push_notifications.sql`
+10. `supabase/migrations/add_public_planning_access.sql`
 
 Ensuite :
 
@@ -194,6 +196,10 @@ Ensuite :
 7. Vérifiez qu'un admin peut renseigner la disponibilité d'un autre professeur.
 
 ## Créer et lier des comptes professeurs
+
+Ajouter un professeur depuis l'application crée son profil dans `teachers`, mais ne crée pas
+son compte de connexion Supabase Auth. Cette séparation est volontaire : le compte Auth doit
+être créé dans le Dashboard, puis rattaché au profil existant.
 
 Dans Supabase Dashboard :
 
@@ -216,6 +222,18 @@ Les rôles se règlent dans `teachers.role` :
 - `teacher` : permet de gérer sa disponibilité et le contenu pédagogique.
 
 Un utilisateur connecté sans profil professeur lié verra une erreur en français dans l'app.
+
+## Planning public sans connexion
+
+Sur l'écran de connexion, le bouton `Consulter le planning sans se connecter` ouvre un
+calendrier public en lecture seule. L'URL peut également être ouverte directement avec
+`?public=planning`.
+
+Le visiteur peut uniquement voir le titre, la date, les horaires et le lieu des cours. Le
+contenu pédagogique, les notes, les disponibilités, les professeurs, le Forum et les
+modifications récentes restent privés. Cette limitation repose à la fois sur RLS et sur des
+droits de colonnes PostgreSQL définis dans
+`supabase/migrations/add_public_planning_access.sql`.
 
 ## Checklist comptes avant production
 

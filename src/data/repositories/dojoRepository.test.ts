@@ -12,6 +12,7 @@ import {
   getForumMessages,
   getForumReadAt,
   getNotificationReadAt,
+  getPublicSessions,
   getRecentChanges,
   markNotificationsRead,
   markForumRead,
@@ -42,6 +43,21 @@ const validSessionInput: CreateSessionInput = {
 beforeEach(async () => {
   window.localStorage.clear();
   await resetMockData();
+});
+
+describe('dojoRepository public planning', () => {
+  it('returns a safe read-only projection without lesson content or notes', async () => {
+    const sessions = await getPublicSessions();
+    const firstPublicSession = sessions[0];
+
+    expect(firstPublicSession).toBeDefined();
+    expect(Object.keys(firstPublicSession).sort()).toEqual(
+      ['date', 'endTime', 'id', 'location', 'startTime', 'title'].sort(),
+    );
+
+    firstPublicSession.title = 'Modification locale du test';
+    expect((await getPublicSessions())[0].title).not.toBe('Modification locale du test');
+  });
 });
 
 describe('dojoRepository teacher management', () => {

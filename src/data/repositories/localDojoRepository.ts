@@ -310,6 +310,19 @@ export async function getSessions(): Promise<Session[]> {
   return toSnapshot(loadState()).sessions;
 }
 
+export async function getPublicSessions() {
+  return toSnapshot(loadState()).sessions.map(
+    ({ id, title, date, startTime, endTime, location }) => ({
+      id,
+      title,
+      date,
+      startTime,
+      endTime,
+      location,
+    }),
+  );
+}
+
 export async function getAvailabilityForSession(sessionId: string): Promise<Availability[]> {
   return toSnapshot(loadState()).availability.filter(
     (availability) => availability.sessionId === sessionId,

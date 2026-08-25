@@ -167,6 +167,63 @@ button:disabled {
   gap: 14px;
 }
 
+.auth-public-access {
+  display: grid;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.auth-public-access .text-button {
+  justify-self: start;
+}
+
+.public-planning-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.public-planning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.public-planning-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.public-planning-brand img {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.public-planning-brand h1,
+.public-planning-brand p {
+  margin: 0;
+}
+
+.public-planning-brand h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+.public-calendar-layout {
+  min-width: 0;
+}
+
+.public-planning-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
 .app-header {
   display: flex;
   align-items: flex-end;
@@ -1421,6 +1478,24 @@ button:disabled {
   .app-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .public-planning-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .public-planning-header .secondary-button {
+    width: 100%;
+  }
+
+  .public-planning-brand {
+    align-items: flex-start;
+  }
+
+  .public-planning-brand img {
+    width: 60px;
+    height: 60px;
   }
 
   .brand-lockup {

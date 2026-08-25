@@ -6,6 +6,7 @@ import { SupabaseDiagnostics } from '../components/dev/SupabaseDiagnostics';
 import { AdminCreateSessionForm } from '../components/sessions/AdminCreateSessionForm';
 import { SessionCalendar } from '../components/sessions/SessionCalendar';
 import { SessionDetails } from '../components/sessions/SessionDetails';
+import { PublicPlanningPage } from '../components/sessions/PublicPlanningPage';
 import { TeachersPage } from '../components/teachers/TeachersPage';
 import { ForumPage } from '../components/forum/ForumPage';
 import { InstallAppPrompt } from '../components/pwa/InstallAppPrompt';
@@ -65,6 +66,22 @@ function updateViewUrl(view: AppView) {
   window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
+function isPublicPlanningRequested() {
+  return new URLSearchParams(window.location.search).get('public') === 'planning';
+}
+
+function updatePublicPlanningUrl(showPlanning: boolean) {
+  const url = new URL(window.location.href);
+
+  if (showPlanning) {
+    url.searchParams.set('public', 'planning');
+  } else {
+    url.searchParams.delete('public');
+  }
+
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
 export function App() {
   const {
     currentTeacher,
@@ -95,6 +112,7 @@ export function App() {
   const [visibleUnreadForumMessageIds, setVisibleUnreadForumMessageIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [showPublicPlanning, setShowPublicPlanning] = useState(isPublicPlanningRequested);
 
   function applyLoadedData(nextData: DojoDataState) {
     setData(nextData);
@@ -666,7 +684,25 @@ export function App() {
   }
 
   if (isSupabaseMode && !authUser) {
-    return <LoginScreen />;
+    if (showPublicPlanning) {
+      return (
+        <PublicPlanningPage
+          onBackToLogin={() => {
+            updatePublicPlanningUrl(false);
+            setShowPublicPlanning(false);
+          }}
+        />
+      );
+    }
+
+    return (
+      <LoginScreen
+        onViewPlanning={() => {
+          updatePublicPlanningUrl(true);
+          setShowPublicPlanning(true);
+        }}
+      />
+    );
   }
 
   if (isSupabaseMode && !currentTeacher) {

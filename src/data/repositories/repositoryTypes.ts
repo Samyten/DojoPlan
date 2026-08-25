@@ -8,6 +8,7 @@ import type {
   DojoDataState,
   ForumMessage,
   PushSubscriptionInput,
+  PublicSession,
   Session,
   Teacher,
   UpdateSessionInput,
@@ -16,6 +17,7 @@ import type {
 export interface DojoRepository {
   getTeachers(): Promise<Teacher[]>;
   getSessions(): Promise<Session[]>;
+  getPublicSessions(): Promise<PublicSession[]>;
   getAvailabilityForSession(sessionId: string): Promise<Availability[]>;
   getAllAvailability(): Promise<Availability[]>;
   getRecentChanges(): Promise<DojoDataState['changes']>;

@@ -9,6 +9,7 @@ import type {
   DojoDataState,
   ForumMessage,
   PushSubscriptionInput,
+  PublicSession,
   Session,
   Teacher,
   TeacherRole,
@@ -40,6 +41,11 @@ type SessionRow = {
   created_at: string;
   updated_at: string;
 };
+
+type PublicSessionRow = Pick<
+  SessionRow,
+  'id' | 'title' | 'date' | 'start_time' | 'end_time' | 'location'
+>;
 
 type AvailabilityRow = {
   id: string;
@@ -115,6 +121,20 @@ export async function getSessions(): Promise<Session[]> {
   }
 
   return (data as SessionRow[]).map(mapSessionRow).sort(compareSessionDateTime);
+}
+
+export async function getPublicSessions(): Promise<PublicSession[]> {
+  const { data, error } = await getSupabaseClient()
+    .from('sessions')
+    .select('id,title,date,start_time,end_time,location')
+    .order('date')
+    .order('start_time');
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as PublicSessionRow[]).map(mapPublicSessionRow).sort(compareSessionDateTime);
 }
 
 export async function getAvailabilityForSession(sessionId: string): Promise<Availability[]> {
@@ -831,6 +851,17 @@ function mapSessionRow(row: SessionRow): Session {
     notes: row.notes ?? '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapPublicSessionRow(row: PublicSessionRow): PublicSession {
+  return {
+    id: row.id,
+    title: row.title,
+    date: row.date,
+    startTime: row.start_time.slice(0, 5),
+    endTime: row.end_time.slice(0, 5),
+    location: row.location ?? undefined,
   };
 }
 

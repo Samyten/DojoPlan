@@ -1,4 +1,4 @@
-import type { Session } from '../../types';
+import type { PublicSession } from '../../types';
 import { getHolidayInfo } from '../../data/holidayCalendar';
 import {
   addDays,
@@ -15,7 +15,7 @@ import {
 const weekdayLabels = ['Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.', 'Dim.'];
 
 interface SessionCalendarProps {
-  sessions: Session[];
+  sessions: PublicSession[];
   currentMonth: Date;
   selectedDate: string | undefined;
   selectedSessionId: string | undefined;
@@ -131,13 +131,11 @@ export function SessionCalendar({
               {selectedHoliday.labels.join(' · ')}
             </p>
           ) : null}
-          <p className="agenda-helper">
-            {selectedDaySessions.length
-              ? `${selectedDaySessions.length} cours prévu${selectedDaySessions.length > 1 ? 's' : ''} ce jour-là.`
-              : selectedHoliday
-                ? 'Aucun cours prévu — cours suspendus.'
-                : 'Sélectionnez une autre date dans le calendrier pour voir les cours prévus.'}
-          </p>
+          {selectedDaySessions.length ? (
+            <p className="agenda-helper">
+              {`${selectedDaySessions.length} cours prévu${selectedDaySessions.length > 1 ? 's' : ''} ce jour-là.`}
+            </p>
+          ) : null}
         </div>
 
         {selectedDaySessions.length ? (
@@ -170,8 +168,8 @@ export function SessionCalendar({
   );
 }
 
-function groupSessionsByDate(sessions: Session[]) {
-  const sessionsByDate = new Map<string, Session[]>();
+function groupSessionsByDate(sessions: PublicSession[]) {
+  const sessionsByDate = new Map<string, PublicSession[]>();
 
   for (const session of sessions) {
     const currentSessions = sessionsByDate.get(session.date) ?? [];

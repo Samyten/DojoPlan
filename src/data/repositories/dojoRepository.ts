@@ -13,6 +13,9 @@ export const getTeachers: DojoRepository['getTeachers'] = (...args) =>
 export const getSessions: DojoRepository['getSessions'] = (...args) =>
   getRepository().getSessions(...args);
 
+export const getPublicSessions: DojoRepository['getPublicSessions'] = (...args) =>
+  getRepository().getPublicSessions(...args);
+
 export const getAvailabilityForSession: DojoRepository['getAvailabilityForSession'] = (...args) =>
   getRepository().getAvailabilityForSession(...args);
 

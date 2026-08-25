@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useAuth } from './useAuth';
 import { getFriendlyErrorMessage } from '../utils/errors';
 
-export function LoginScreen() {
+interface LoginScreenProps {
+  onViewPlanning: () => void;
+}
+
+export function LoginScreen({ onViewPlanning }: LoginScreenProps) {
   const { signIn, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,6 +70,13 @@ export function LoginScreen() {
             {isSubmitting ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
+
+        <div className="auth-public-access">
+          <span>Vous souhaitez seulement voir les horaires ?</span>
+          <button className="text-button" type="button" onClick={onViewPlanning}>
+            Consulter le planning sans se connecter
+          </button>
+        </div>
       </section>
     </main>
   );
