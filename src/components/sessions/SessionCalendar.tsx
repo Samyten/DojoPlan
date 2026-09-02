@@ -17,6 +17,7 @@ type CalendarSession = Session | PublicSession;
 
 interface SessionCalendarProps {
   sessions: CalendarSession[];
+  presentCountBySessionId?: ReadonlyMap<string, number>;
   currentMonth: Date;
   selectedDate: string | undefined;
   selectedSessionId: string | undefined;
@@ -27,6 +28,7 @@ interface SessionCalendarProps {
 
 export function SessionCalendar({
   sessions,
+  presentCountBySessionId,
   currentMonth,
   selectedDate,
   selectedSessionId,
@@ -101,14 +103,28 @@ export function SessionCalendar({
                 </span>
               ) : null}
               <span className="calendar-day__sessions">
-                {daySessions.slice(0, 2).map((session) => (
-                  <span key={session.id} className="calendar-session-dot">
-                    {session.startTime.replace(':', 'h')}
-                  </span>
-                ))}
-                {daySessions.length > 2 ? (
-                  <span className="calendar-session-dot">+{daySessions.length - 2} autre</span>
-                ) : null}
+                {daySessions.map((session) => {
+                  const presentCount = getPresentCount(session, presentCountBySessionId);
+
+                  return (
+                    <span key={session.id} className="calendar-session-entry">
+                      <span className="calendar-session-time">
+                        {session.startTime.replace(':', 'h')}
+                      </span>
+                      <span
+                        className={
+                          presentCount
+                            ? 'calendar-session-presence'
+                            : 'calendar-session-presence calendar-session-presence--empty'
+                        }
+                        aria-label={`${presentCount} ${presentCount === 1 ? 'professeur présent' : 'professeurs présents'}`}
+                        title={`${presentCount} ${presentCount === 1 ? 'professeur présent' : 'professeurs présents'}`}
+                      >
+                        {presentCount}
+                      </span>
+                    </span>
+                  );
+                })}
               </span>
             </button>
           );
@@ -174,6 +190,17 @@ export function SessionCalendar({
       </div>
     </section>
   );
+}
+
+function getPresentCount(
+  session: CalendarSession,
+  presentCountBySessionId: ReadonlyMap<string, number> | undefined,
+) {
+  if ('presentTeacherNames' in session) {
+    return session.presentTeacherNames.length;
+  }
+
+  return presentCountBySessionId?.get(session.id) ?? 0;
 }
 
 function groupSessionsByDate(sessions: CalendarSession[]) {

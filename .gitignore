@@ -4,3 +4,5 @@ dist
 .env.local
 *.local
 artifacts
+.playwright-cli/
+output/playwright/

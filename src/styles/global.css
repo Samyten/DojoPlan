@@ -562,9 +562,15 @@ button:disabled {
   box-shadow: inset 0 3px 0 #c6b9a5;
 }
 
-.calendar-day--past .calendar-session-dot {
+.calendar-day--past .calendar-session-time {
   background: #d2dade;
   color: #59666d;
+}
+
+.calendar-day--past .calendar-session-presence {
+  border-color: #b6c1c5;
+  background: #eef1f2;
+  color: #657178;
 }
 
 .calendar-day--past .calendar-holiday-label {
@@ -599,10 +605,10 @@ button:disabled {
 }
 
 .calendar-day__sessions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 4px;
   min-width: 0;
+  width: 100%;
 }
 
 .calendar-holiday-label {
@@ -617,11 +623,19 @@ button:disabled {
   white-space: nowrap;
 }
 
-.calendar-session-dot {
+.calendar-session-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.calendar-session-time {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
+  min-width: 0;
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent-strong);
@@ -629,6 +643,26 @@ button:disabled {
   font-size: 0.74rem;
   font-weight: 820;
   white-space: nowrap;
+}
+
+.calendar-session-presence {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 1px solid #85c697;
+  border-radius: 999px;
+  background: #e2f6e8;
+  color: #176b32;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.calendar-session-presence--empty {
+  border-color: #c8d8cc;
+  background: #f1f7f3;
+  color: #607568;
 }
 
 .day-session-picker {
@@ -1570,11 +1604,24 @@ button:disabled {
     padding: 7px;
   }
 
-  .calendar-session-dot {
-    min-width: 38px;
-    padding: 3px 5px;
-    font-size: 0.68rem;
+  .calendar-day {
+    padding: 5px 4px;
+  }
+
+  .calendar-session-entry {
+    gap: 2px;
+  }
+
+  .calendar-session-time {
+    padding: 3px 2px;
+    font-size: 0.62rem;
     white-space: nowrap;
+  }
+
+  .calendar-session-presence {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
   }
 
   .calendar-holiday-label {

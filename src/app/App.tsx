@@ -300,6 +300,18 @@ export function App() {
     [data.availability, selectedSessionId],
   );
 
+  const presentCountBySessionId = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const availability of data.availability) {
+      if (availability.status === 'present') {
+        counts.set(availability.sessionId, (counts.get(availability.sessionId) ?? 0) + 1);
+      }
+    }
+
+    return counts;
+  }, [data.availability]);
+
   const unreadChanges = useMemo(() => {
     if (!currentTeacher || notificationReadTeacherId !== currentTeacher.id) {
       return [];
@@ -743,6 +755,7 @@ export function App() {
           <div className="calendar-main">
             <SessionCalendar
               sessions={data.sessions}
+              presentCountBySessionId={presentCountBySessionId}
               currentMonth={currentMonth}
               selectedDate={selectedDate}
               selectedSessionId={selectedSessionId}
