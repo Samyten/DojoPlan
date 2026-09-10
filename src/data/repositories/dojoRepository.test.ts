@@ -481,13 +481,13 @@ describe('dojoRepository forum messages', () => {
 
     expect(messages).toHaveLength(3);
     expect(messages.map((message) => message.authorName)).toEqual([
-      'Christian Martinez',
-      'Marc Piperno',
       'Samy Belkacemi',
+      'Marc Piperno',
+      'Christian Martinez',
     ]);
     expect(messages[0]).toMatchObject({
-      teacherId,
-      message: 'Message de Christian.',
+      teacherId: superAdminId,
+      message: 'Message de Samy.',
     });
     expect(new Date(messages[0].createdAt).toString()).not.toBe('Invalid Date');
   });

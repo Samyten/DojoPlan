@@ -95,7 +95,7 @@ function loadForumMessages(): ForumMessage[] {
       window.localStorage.getItem(FORUM_MESSAGES_STORAGE_KEY) ?? '[]',
     ) as ForumMessage[];
     return structuredClone(messages).sort((left, right) =>
-      left.createdAt.localeCompare(right.createdAt),
+      right.createdAt.localeCompare(left.createdAt),
     );
   } catch {
     return [];
@@ -435,7 +435,7 @@ export async function createForumMessage(
     createdAt: new Date().toISOString(),
   };
   const messages = loadForumMessages();
-  messages.push(forumMessage);
+  messages.unshift(forumMessage);
   saveForumMessages(messages);
 
   return structuredClone(forumMessage);

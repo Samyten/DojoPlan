@@ -420,8 +420,8 @@ export function App() {
     try {
       const createdMessage = await createForumMessage(message, currentTeacher.id);
       setForumMessages((current) =>
-        [...current.filter((item) => item.id !== createdMessage.id), createdMessage].sort((left, right) =>
-          left.createdAt.localeCompare(right.createdAt),
+        [createdMessage, ...current.filter((item) => item.id !== createdMessage.id)].sort((left, right) =>
+          right.createdAt.localeCompare(left.createdAt),
         ),
       );
       void markForumRead(currentTeacher.id, createdMessage.createdAt)

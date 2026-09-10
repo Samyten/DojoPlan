@@ -31,7 +31,7 @@ export function ForumPage({
   useEffect(() => {
     const messageList = messageListRef.current;
     if (messageList) {
-      messageList.scrollTop = messageList.scrollHeight;
+      messageList.scrollTop = 0;
     }
   }, [messages]);
 
