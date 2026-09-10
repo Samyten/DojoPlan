@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { ForumMessage, Teacher } from '../../types';
 import { formatForumTimestamp } from '../../utils/dates';
@@ -27,6 +27,10 @@ export function ForumPage({
   const [draft, setDraft] = useState('');
   const [formError, setFormError] = useState<string | undefined>();
   const messageListRef = useRef<HTMLDivElement>(null);
+  const orderedMessages = useMemo(
+    () => [...messages].sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
+    [messages],
+  );
 
   useEffect(() => {
     const messageList = messageListRef.current;
@@ -87,7 +91,7 @@ export function ForumPage({
         {!isLoading && !messages.length ? (
           <p className="empty-state">Aucun message pour le moment.</p>
         ) : null}
-        {messages.map((message) => {
+        {orderedMessages.map((message) => {
           const isUnread = unreadMessageIds.has(message.id);
 
           return (
